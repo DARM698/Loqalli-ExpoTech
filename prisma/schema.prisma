@@ -18,3 +18,21 @@ model Perfil {
   ubicacion String?  // Ejemplo: "Santa Ana" o "La Libertad"
   createdAt DateTime @default(now())
 }
+
+// prisma/schema.prisma
+model Experience {
+  id              String   @id @default(cuid())
+  title           String   
+  category        String   
+  description     String   @db.Text 
+  pricePerPerson  Float    
+  maxParticipants Int      
+  address         String   
+  lat             Float?
+  lng             Float?
+  days            String[] 
+  slots           String[] 
+  images          String[] 
+  status          String   @default("DRAFT")
+  createdAt       DateTime @default(now())
+}

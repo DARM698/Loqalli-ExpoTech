@@ -1,118 +1,284 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { createExperience } from '../../actions';
+import dynamic from 'next/dynamic';
+import HostNavbar from '@/components/shared/navbar';
+import { DayPicker } from 'react-day-picker';
+import { format } from 'date-fns';
+import 'react-day-picker/dist/style.css';
 
-const DAYS = [
-  { id: 0, label: 'S', full: 'Sunday' },
-  { id: 1, label: 'M', full: 'Monday' },
-  { id: 2, label: 'T', full: 'Tuesday' },
-  { id: 3, label: 'W', full: 'Wednesday' },
-  { id: 4, label: 'T', full: 'Thursday' },
-  { id: 5, label: 'F', full: 'Friday' },
-  { id: 6, label: 'S', full: 'Saturday' },
-];
+const DynamicMap = dynamic(() => import('@/components/Map'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full bg-[#F3D9CF]/10 animate-pulse flex items-center justify-center text-[#D2693E] text-xs font-bold uppercase tracking-widest">
+      Loading Map...
+    </div>
+  )
+});
+
+const CATEGORIES = ["Ceramics & Pottery", "Textiles", "Gastronomy", "Adventure"];
+
+const calendarStyles = `
+  .rdp { 
+    --rdp-accent-color: #D2693E; 
+    --rdp-background-color: #F3D9CF; 
+    margin: 0;
+    font-family: inherit;
+  }
+  .rdp-day_selected:not([disabled]), 
+  .rdp-day_selected:focus:not([disabled]), 
+  .rdp-day_selected:hover:not([disabled]) { 
+    background-color: var(--rdp-accent-color) !important; 
+  }
+  .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+    background-color: #F3D9CF !important;
+    color: #D2693E;
+  }
+`;
 
 export default function CreateExperiencePage() {
-  const [selectedDays, setSelectedDays] = useState<number[]>([]);
+  const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  
+  const [category, setCategory] = useState("Ceramics & Pottery");
+  const [isCatOpen, setIsCatOpen] = useState(false);
+  const [startPeriod, setStartPeriod] = useState("AM");
+  const [isStartOpen, setIsStartOpen] = useState(false);
+  const [endPeriod, setEndPeriod] = useState("PM");
+  const [isEndOpen, setIsEndOpen] = useState(false);
 
-  const toggleDay = (id: number) => {
-    // Usamos el ID único (0-6) en lugar de la letra 'S' o 'T'
-    setSelectedDays(prev => 
-      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
-    );
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [location, setLocation] = useState({ lat: 13.689, lng: -89.187 });
+  const [address, setAddress] = useState("");
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+
+  useEffect(() => { setMounted(true); }, []);
+
+  const handleSearchLocation = async () => {
+    if (!address || typeof window === 'undefined') return;
+    try {
+        const { OpenStreetMapProvider } = await import('leaflet-geosearch');
+        const provider = new OpenStreetMapProvider({
+          params: { 'accept-language': 'es', countrycodes: 'sv', addressdetails: 1 },
+        });
+        const results = await provider.search({ query: address });
+        if (results && results.length > 0) setLocation({ lat: results[0].y, lng: results[0].x });
+    } catch (error) { console.error(error); }
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setImageFiles(prev => [...prev, ...newFiles]);
+      setPreviews(prev => [...prev, ...newFiles.map(file => URL.createObjectURL(file))]);
+    }
+  };
+
+ async function handleSubmit(formData: FormData) {
+  setLoading(true);
+
+  try { 
+    formData.delete('images');
+    
+    formData.append('category', category);
+    formData.append('startPeriod', startPeriod);
+    formData.append('endPeriod', endPeriod);
+    
+    const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
+    formData.append('selectedDays', JSON.stringify(formattedDates)); 
+    
+    formData.append('lat', location.lat.toString());
+    formData.append('lng', location.lng.toString());
+    
+    imageFiles.forEach((file) => {
+      formData.append('images', file);
+    });
+
+    const result = await createExperience(formData);
+
+    // ⚠️ Solo funciona si tu server action NO hace redirect()
+    if (result?.error) {
+      alert(result.error);
+      return;
+    }
+
+    // 🧠 IMPORTANTE: si todo sale bien, aquí NO pongas nada
+    // el redirect debe venir del server action
+
+  } 
+  catch (error) { 
+    console.error("Error fatal en el cliente:", error); 
+    alert("Error crítico al intentar guardar. Revisa tu conexión.");
+  } 
+  finally {
+    setLoading(false);
+  }
+}
+
+  const noArrowsClass = "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+  if (!mounted) return <div className="p-8 animate-pulse bg-white min-h-screen" />;
+
   return (
-    <div className="min-h-screen bg-white p-4 md:p-8 font-sans text-[#4A3933]">
-      {/* Header adaptable */}
-      <header className="max-w-5xl mx-auto text-center mb-10">
-        <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">
-          List a Micro-experience
-        </h1>
-        <p className="text-sm md:text-base text-gray-600 max-w-2xl mx-auto">
-          Share your craft, heritage, and stories with the world. Join our community of artisans and host unique hands-on sessions.
-        </p>
-      </header>
+    <>
+      <style>{calendarStyles}</style>
+      <HostNavbar />
+      
+      <div className="min-h-screen bg-white p-4 md:p-8 md:pt-12 font-sans text-[#4A3933]">
+        <header className="max-w-5xl mx-auto text-center mb-10">
+          <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">List a Micro-experience</h1>
+        </header>
 
-      <main className="max-w-5xl mx-auto space-y-6">
-        {/* Sección: Basic Info - Grid responsivo (1 col en móvil, 2 en desktop) */}
-        <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-[#D2693E] text-white p-1 rounded-full text-xs">i</span>
-            <h2 className="font-bold text-lg">Basic Info</h2>
-          </div>
+        <form action={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-500">Experience Title</label>
-              <input 
-                type="text" 
-                placeholder="e.g. Traditional Indigo Dyeing Workshop"
-                className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#D2693E]"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-500">Craft Category</label>
-              <select className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg focus:outline-none">
-                <option>Ceramics & Pottery</option>
-                <option>Textiles</option>
-                <option>Gastronomy</option>
-              </select>
-            </div>
-            
-          </div>
-        </section>
+          <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4 shadow-sm">
+            <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Basic Info</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-500">Experience Title</label>
+                <input name="title" required type="text" placeholder="e.g. Traditional Indigo" className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none focus:ring-2 focus:ring-[#D2693E]" />
+              </div>
 
-        {/* Sección: Availability - Arreglo de los días S/T */}
-        <section className="border border-[#F3D9CF] rounded-xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <span className="text-[#D2693E]">📅</span>
-            <h2 className="font-bold text-lg">Availability</h2>
-          </div>
+              <div className="space-y-2 relative">
+                <label className="text-sm font-medium text-gray-500">Craft Category</label>
+                <div 
+                  onClick={() => setIsCatOpen(!isCatOpen)}
+                  className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg flex justify-between items-center cursor-pointer hover:bg-[#F3D9CF]/50 transition-colors"
+                >
+                  <span>{category}</span>
+                  <svg className={`h-4 w-4 transition-transform ${isCatOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+                {isCatOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#F3D9CF] rounded-lg shadow-xl overflow-hidden">
+                    {CATEGORIES.map((cat) => (
+                      <div 
+                        key={cat}
+                        onClick={() => { setCategory(cat); setIsCatOpen(false); }}
+                        className="p-3 hover:bg-[#D2693E] hover:text-white cursor-pointer transition-colors"
+                      >
+                        {cat}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
 
-          <div className="flex flex-col md:flex-row gap-8">
-            <div className="flex-1">
-              <p className="text-sm text-gray-500 mb-4">Select operating days</p>
-              <div className="flex gap-2 flex-wrap">
-                {DAYS.map((day) => (
-                  <button
-                    key={day.id} // El ID único evita que se seleccionen ambas 'S'
-                    onClick={() => toggleDay(day.id)}
-                    className={`w-10 h-10 rounded-full border transition-all flex items-center justify-center font-medium ${
-                      selectedDays.includes(day.id)
-                        ? 'bg-[#D2693E] border-[#D2693E] text-white'
-                        : 'border-gray-300 text-gray-400 hover:border-[#D2693E]'
-                    }`}
-                  >
-                    {day.label}
-                  </button>
+          <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-6 shadow-sm">
+            <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
+            <textarea name="description" required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <input name="price" required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass}`} />
+              <input name="participants" required type="number" placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass}`} />
+            </div>
+          </section>
+
+          <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+            <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Location</h2>
+            <div className="space-y-4 pt-4">
+              <div className="flex gap-2">
+                <input 
+                  name="address" 
+                  value={address} 
+                  onChange={(e) => setAddress(e.target.value)} 
+                  type="text" 
+                  placeholder="Search address in El Salvador..." 
+                  className="flex-1 p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none focus:ring-2 focus:ring-[#D2693E]" 
+                />
+                <button type="button" onClick={handleSearchLocation} className="bg-[#D2693E] text-white px-6 py-2 rounded-lg font-bold hover:bg-[#b05832] transition-colors">Find</button>
+              </div>
+              <div className="w-full h-64 rounded-xl overflow-hidden z-0 border border-[#F3D9CF]">
+                <DynamicMap lat={location.lat} lng={location.lng} />
+              </div>
+            </div>
+          </section>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col items-center">
+              <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 w-full mb-4">Availability</h2>
+              <div className="bg-[#F3D9CF]/10 rounded-lg p-2 border border-[#F3D9CF]/50">
+                <DayPicker
+                  mode="multiple"
+                  selected={selectedDates}
+                  onSelect={(dates) => setSelectedDates(dates || [])}
+                  disabled={{ before: new Date() }}
+                  className="border-none"
+                />
+              </div>
+              <p className="text-xs text-gray-500 mt-4 self-start">
+                {selectedDates.length > 0 
+                  ? `${selectedDates.length} dates selected` 
+                  : "Click on the dates you'll be hosting."}
+              </p>
+            </section>
+
+            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+              <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule</h2>
+              <div className="space-y-4 mt-4">
+                {[ {label: 'From', state: startPeriod, setState: setStartPeriod, open: isStartOpen, setOpen: setIsStartOpen, hName: 'startHour', mName: 'startMin'},
+                   {label: 'To', state: endPeriod, setState: setEndPeriod, open: isEndOpen, setOpen: setIsEndOpen, hName: 'endHour', mName: 'endMin'}
+                ].map((time, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <span className="text-xs font-bold text-gray-400 w-12 uppercase">{time.label}</span>
+                    <div className="flex bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg overflow-visible flex-1">
+                      <input name={time.hName} type="number" defaultValue={9} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
+                      <span className="flex items-center text-[#D2693E] font-bold">:</span>
+                      <input name={time.mName} type="number" defaultValue={0} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
+                      
+                      <div className="relative">
+                        <div 
+                          onClick={() => time.setOpen(!time.open)}
+                          className="bg-[#D2693E] text-white text-xs font-bold px-4 h-full flex items-center cursor-pointer min-w-[60px] justify-center hover:bg-[#b05832] transition-colors"
+                        >
+                          {time.state}
+                        </div>
+                        {time.open && (
+                          <div className="absolute right-0 top-full mt-1 bg-white border border-[#F3D9CF] rounded shadow-xl z-[60] overflow-hidden">
+                            {["AM", "PM"].map(p => (
+                              <div 
+                                key={p} 
+                                onClick={() => { time.setState(p); time.setOpen(false); }}
+                                className="px-4 py-2 text-[#4A3933] hover:bg-[#F3D9CF] cursor-pointer"
+                              >
+                                {p}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 ))}
               </div>
-            </div>
-
-            <div className="flex-1">
-              <p className="text-sm text-gray-500 mb-4">Time Slots</p>
-              <div className="flex gap-2 flex-wrap items-center">
-                <span className="px-4 py-2 bg-[#D9EAD3] text-[#274E13] rounded-full text-sm">10:00 AM ×</span>
-                <span className="px-4 py-2 bg-[#D9EAD3] text-[#274E13] rounded-full text-sm">02:00 PM ×</span>
-                <button className="px-4 py-2 border border-dashed border-[#D2693E] text-[#D2693E] rounded-full text-sm hover:bg-[#D2693E]/5">
-                  + Add Slot
-                </button>
-              </div>
-            </div>
+            </section>
           </div>
-        </section>
 
-        {/* Footer de acción responsivo */}
-        <footer className="border border-[#F3D9CF] rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <button className="text-gray-500 underline text-sm order-2 md:order-1">Save Draft</button>
-          <div className="flex items-center gap-6 order-1 md:order-2 w-full md:w-auto">
-            <button className="text-gray-500 text-sm hidden md:block">Preview Listing</button>
-            <button className="w-full md:w-auto bg-[#D2693E] text-white px-8 py-3 rounded-lg font-bold hover:bg-[#b55630] transition-colors">
-              Publish Experience
+          <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+            <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Photos</h2>
+            <div className="flex flex-wrap gap-4 mt-4">
+              <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10 transition-colors">
+                <span className="text-2xl text-[#D2693E]">+</span>
+                <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
+              </label>
+              {previews.map((src, i) => (
+                <img key={i} src={src} className="w-24 h-24 object-cover rounded-lg border border-[#F3D9CF]" alt="Preview" />
+              ))}
+            </div>
+          </section>
+
+          <footer className="flex justify-end pt-4">
+            <button 
+              disabled={loading}
+              type="submit" 
+              className="bg-[#D2693E] text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {loading ? 'Publishing...' : 'Publish Experience'}
             </button>
-          </div>
-        </footer>
-      </main>
-    </div>
+          </footer>
+        </form>
+      </div>
+    </>
   );
 }

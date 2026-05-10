@@ -2,7 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { Search, Sparkles, Users, Palette, Heart, Send, ArrowRight } from 'lucide-react';
 
-export default function Home() {
+import { useRouter } from 'next/navigation'
+
+export default function Home()  {
+  const router = useRouter()
   const [imgIndex, setImgIndex] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
   
@@ -45,18 +48,17 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#D17842] selection:text-white">
       
-  
-      <style jsx global>{`
-        .reveal {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: all 1s ease-out;
-        }
-        .reveal-visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      `}</style>
+  <style >{`
+  .reveal {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 1s ease-out;
+  }
+  .reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`}</style>
 
       {/* 1. NAVEGACIÓN (Botones Idénticos) */}
       <nav className={`fixed w-full z-50 transition-all duration-500 px-6 md:px-10 ${
@@ -75,9 +77,12 @@ export default function Home() {
             <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
               Login
             </button>
-            <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
-              Sign Up
-            </button>
+            <button
+  onClick={() => router.push('/register')}
+  className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest"
+>
+  Sign Up
+</button>
           </div>
         </div>
       </nav>
@@ -267,3 +272,5 @@ export default function Home() {
     </main>
   );
 }
+
+

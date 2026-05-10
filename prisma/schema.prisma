@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,25 +9,19 @@ datasource db {
 model Perfil {
   id        String   @id @default(uuid())
   nombre    String
-  rol       String   // "HOST" o "TURISTA"
-  ubicacion String?  // Ejemplo: "Santa Ana" o "La Libertad"
+  rol       String
+  ubicacion String?
   createdAt DateTime @default(now())
 }
 
-// prisma/schema.prisma
-model Experience {
-  id              String   @id @default(cuid())
-  title           String   
-  category        String   
-  description     String   @db.Text 
-  pricePerPerson  Float    
-  maxParticipants Int      
-  address         String   
-  lat             Float?
-  lng             Float?
-  days            String[] 
-  slots           String[] 
-  images          String[] 
-  status          String   @default("DRAFT")
-  createdAt       DateTime @default(now())
+
+model MicroExperience {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  price       Float
+  imageUrl    String
+  location    String
+  hostId      String   
+  createdAt   DateTime @default(now())
 }

@@ -1,10 +1,11 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react'; // 1. Añadimos useRef
 import { createExperience } from '../../actions';
 import dynamic from 'next/dynamic';
 import HostNavbar from '@/components/shared/navbar';
 import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
+import { useRouter } from 'next/navigation'; // 2. Añadimos useRouter
 import 'react-day-picker/dist/style.css';
 
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
@@ -37,6 +38,8 @@ const calendarStyles = `
 `;
 
 export default function CreateExperiencePage() {
+  const router = useRouter(); // Inicializamos el router
+  const formRef = useRef<HTMLFormElement>(null); // Referencia para resetear el form
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -56,6 +59,17 @@ export default function CreateExperiencePage() {
   useEffect(() => { 
     setMounted(true); 
   }, []);
+
+  // Función para limpiar todos los campos
+  const clearForm = () => {
+    formRef.current?.reset(); // Limpia inputs nativos (title, description, price...)
+    setCategory("Ceramics & Pottery");
+    setSelectedDates([]);
+    setImageFiles([]);
+    setPreviews([]);
+    setAddress("");
+    setLocation({ lat: 13.689, lng: -89.187 });
+  };
 
   const handleSearchLocation = async () => {
     if (!address || typeof window === 'undefined') return;
@@ -100,6 +114,11 @@ export default function CreateExperiencePage() {
         alert(result.error);
         return;
       }
+
+      // Si todo sale bien:
+      clearForm(); // 1. Limpiamos campos
+      router.push('/explore'); // 2. Redirigimos
+      
     } 
     catch (error) { 
       console.error("Error fatal en el cliente:", error); 
@@ -112,15 +131,11 @@ export default function CreateExperiencePage() {
 
   const noArrowsClass = "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
-  // IMPORTANTE: No hacemos return prematuro aquí.
-  // Renderizamos una estructura base consistente para el servidor y el cliente.
-
   return (
     <div suppressHydrationWarning>
       <HostNavbar />
       
       {!mounted ? (
-        // Skeleton que se verá durante la carga inicial en el cliente
         <div className="min-h-screen bg-white p-8 animate-pulse flex items-center justify-center">
              <div className="text-[#D2693E] font-serif text-xl">Loading experience creator...</div>
         </div>
@@ -132,8 +147,9 @@ export default function CreateExperiencePage() {
             <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">List a Micro-experience</h1>
           </header>
 
-          <form action={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
+          <form ref={formRef} action={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
             
+            {/* SECCIÓN BASIC INFO */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Basic Info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -168,6 +184,7 @@ export default function CreateExperiencePage() {
               </div>
             </section>
 
+            {/* SECCIÓN DETAILS */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
               <textarea name="description" required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
@@ -177,6 +194,7 @@ export default function CreateExperiencePage() {
               </div>
             </section>
 
+            {/* SECCIÓN LOCATION */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Location</h2>
               <div className="space-y-4 pt-4">
@@ -198,6 +216,7 @@ export default function CreateExperiencePage() {
             </section>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* SECCIÓN AVAILABILITY */}
               <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col items-center">
                 <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 w-full mb-4">Availability</h2>
                 <div className="bg-[#F3D9CF]/10 rounded-lg p-2 border border-[#F3D9CF]/50">
@@ -216,6 +235,7 @@ export default function CreateExperiencePage() {
                 </p>
               </section>
 
+              {/* SECCIÓN SCHEDULE */}
               <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
                 <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule</h2>
                 <div className="space-y-4 mt-4">
@@ -257,6 +277,7 @@ export default function CreateExperiencePage() {
               </section>
             </div>
 
+            {/* SECCIÓN PHOTOS */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Photos</h2>
               <div className="flex flex-wrap gap-4 mt-4">
@@ -270,7 +291,18 @@ export default function CreateExperiencePage() {
               </div>
             </section>
 
-            <footer className="flex justify-end pt-4">
+            {/* FOOTER CON LOS DOS BOTONES */}
+            <footer className="flex justify-end gap-4 pt-4 items-center">
+              {/* Botón de Cancelar / Ir al Catálogo */}
+              <button 
+                type="button" 
+                onClick={() => router.push('/explore')}
+                className="text-gray-500 font-bold px-6 py-2 hover:text-[#D2693E] transition-colors"
+              >
+                View
+              </button>
+
+              {/* Botón de Publicar */}
               <button 
                 disabled={loading}
                 type="submit" 

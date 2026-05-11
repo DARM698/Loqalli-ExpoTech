@@ -1,72 +1,69 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
+import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 
 export async function createExperience(formData: FormData) {
-  // Usamos un bloque try/catch para evitar que el proceso colapse y mande errores de red al cliente
   try {
-    const title = formData.get('title') as string;
-    const category = formData.get('category') as string;
-    const description = formData.get('description') as string;
-    const price = parseFloat(formData.get('price') as string || "0");
-    const participants = parseInt(formData.get('participants') as string || "1");
-    const address = formData.get('address') as string;
-    const lat = parseFloat(formData.get('lat') as string || "0");
-    const lng = parseFloat(formData.get('lng') as string || "0");
-
-    // Formateo de Horarios
-    const sHour = formData.get('startHour')?.toString() || "12";
-    const sMin = formData.get('startMin')?.toString().padStart(2, '0') || "00";
-    const sPeriod = formData.get('startPeriod')?.toString() || "AM";
-    const eHour = formData.get('endHour')?.toString() || "12";
-    const eMin = formData.get('endMin')?.toString().padStart(2, '0') || "00";
-    const ePeriod = formData.get('endPeriod')?.toString() || "PM";
-
-    const timeRange = `${sHour}:${sMin} ${sPeriod} - ${eHour}:${eMin} ${ePeriod}`;
-
-    // Manejo de Fechas (parseamos el JSON enviado desde el cliente)
-    const daysRaw = formData.get('selectedDays') as string;
-    const selectedDays = daysRaw ? JSON.parse(daysRaw) : [];
-
-    // Manejo de Imágenes 
-    // Nota: Por ahora guardas strings con el nombre. 
-    // Si usas Cloudinary, aquí deberías insertar la lógica de subida.
     const imageFiles = formData.getAll('images') as File[];
-    const imageUrls = imageFiles
-      .filter(file => file instanceof File && file.name !== 'undefined' && file.size > 0)
-      .map(file => `/uploads/${file.name}`);
+    const imageUrls: string[] = [];
 
-    // Guardado en la Base de Datos con Prisma
+    // LÓGICA DE SUBIDA A SUPABASE BUCKET
+    for (const file of imageFiles) {
+      // Si el campo está vacío o no es un archivo válido, saltar
+      if (!file || file.size === 0) continue;
+
+      // 1. Crear un nombre único y limpio (sin espacios ni caracteres raros)
+      const fileExtension = file.name.split('.').pop();
+      const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
+      
+      // 2. Subir al bucket 'experiences'
+      const { data, error: uploadError } = await supabase.storage
+        .from('experiences') 
+        .upload(cleanFileName, file, {
+          contentType: file.type, // Importante para que el navegador la renderice
+          upsert: false
+        });
+
+      if (uploadError) {
+        console.error("Error subiendo a Supabase:", uploadError.message);
+        // Si falla la subida, lanzamos error para no crear una experiencia sin fotos
+        throw new Error(`Error al subir imagen: ${uploadError.message}`);
+      }
+
+      // 3. Obtener la URL pública real
+      const { data: { publicUrl } } = supabase.storage
+        .from('experiences')
+        .getPublicUrl(cleanFileName);
+
+      imageUrls.push(publicUrl);
+    }
+
+    // 4. Guardado en la Base de Datos con Prisma
     await prisma.experience.create({
       data: {
-        title,
-        category,
-        description,
-        pricePerPerson: price,
-        maxParticipants: participants,
-        address,
-        lat,
-        lng,
-        days: selectedDays,
-        slots: [timeRange], 
-        images: imageUrls,
+        title: formData.get('title') as string,
+        category: formData.get('category') as string,
+        description: formData.get('description') as string,
+        pricePerPerson: parseFloat(formData.get('price') as string || "0"),
+        maxParticipants: parseInt(formData.get('participants') as string || "1"),
+        address: formData.get('address') as string,
+        lat: parseFloat(formData.get('lat') as string || "0"),
+        lng: parseFloat(formData.get('lng') as string || "0"),
+        days: JSON.parse(formData.get('selectedDays') as string || "[]"),
+        slots: [`${formData.get('startHour')}:${formData.get('startMin')} ${formData.get('startPeriod')} - ${formData.get('endHour')}:${formData.get('endMin')} ${formData.get('endPeriod')}`], 
+        images: imageUrls, 
         status: 'PUBLISHED',
       },
     });
 
-  } catch (error) {
-    // Si algo falla, lo vemos en la terminal del servidor
-    console.error("Error detallado en DB:", error);
-    
-    // Devolvemos el error al cliente de forma controlada
-    return { 
-      error: "No se pudo crear la experiencia. Verifica que todos los campos sean correctos." 
-    };
-  }
+    // 5. Revalidar para que aparezca la nueva experiencia en el Home
+    revalidatePath('/');
+    return { success: true };
 
-  // Si no entró al catch, revalidamos la cache y redirigimos
-  revalidatePath('/'); 
-  return { success: true };
+  } catch (error: any) {
+    console.error("Error detallado en createExperience:", error);
+    return { error: error.message || "Error al guardar la experiencia." };
+  }
 }

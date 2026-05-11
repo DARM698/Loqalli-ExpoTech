@@ -6,7 +6,7 @@ export default function HostNavbar() {
   const pathname = usePathname();
 
   const navLinks = [
-    { name: 'Create Experience', href: '/host/create' },
+    { name: 'Create Experience', href: '/uploadMicroexperiences' },
     { name: 'Agenda / Calendar', href: '/host/agenda' },
     { name: 'Profile', href: '/host/profile' },
   ];

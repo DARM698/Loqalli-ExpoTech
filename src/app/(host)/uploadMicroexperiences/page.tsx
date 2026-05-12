@@ -299,7 +299,7 @@ export default function CreateExperiencePage() {
                 onClick={() => router.push('/explore')}
                 className="text-gray-500 font-bold px-6 py-2 hover:text-[#D2693E] transition-colors"
               >
-                View
+                View  
               </button>
 
               {/* Botón de Publicar */}

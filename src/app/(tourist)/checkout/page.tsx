@@ -78,6 +78,14 @@ export default function CheckoutPage() {
         <h3 className="font-medium text-[#2E2A27]">
         Chivo Wallet / Digital
         </h3>
+  </div>
+                {/* Chivo Wallet */}
+        <div className="border-2 rounded-xl border-[#DA653B] p-4 w-64 cursor-pointer">
+
+        <h3 className="font-medium text-[#2E2A27]">
+        Cash
+        </h3>
+      
 
     </div>
     

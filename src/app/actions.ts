@@ -6,6 +6,11 @@ import { revalidatePath } from 'next/cache';
 
 export async function createExperience(formData: FormData) {
   try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      throw new Error("User not authenticated");
+    }
+
     const imageFiles = formData.getAll('images') as File[];
     const imageUrls: string[] = [];
 
@@ -18,7 +23,7 @@ export async function createExperience(formData: FormData) {
       const fileExtension = file.name.split('.').pop();
       const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
       
-      // 2. Subir al bucket 'experiences'
+
       const { data, error: uploadError } = await supabase.storage
         .from('experiences') 
         .upload(cleanFileName, file, {
@@ -28,7 +33,6 @@ export async function createExperience(formData: FormData) {
 
       if (uploadError) {
         console.error("Error subiendo a Supabase:", uploadError.message);
-        // Si falla la subida, lanzamos error para no crear una experiencia sin fotos
         throw new Error(`Error al subir imagen: ${uploadError.message}`);
       }
 
@@ -55,6 +59,9 @@ export async function createExperience(formData: FormData) {
         slots: [`${formData.get('startHour')}:${formData.get('startMin')} ${formData.get('startPeriod')} - ${formData.get('endHour')}:${formData.get('endMin')} ${formData.get('endPeriod')}`], 
         images: imageUrls, 
         status: 'PUBLISHED',
+        host: {
+          connect: { id: user.id },
+        },
       },
     });
 

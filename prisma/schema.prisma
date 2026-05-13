@@ -1,8 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,15 +6,33 @@ datasource db {
   provider = "postgresql"
 }
 
-model Perfil {
-  id        String   @id @default(uuid())
-  nombre    String
-  rol       String   // "HOST" o "TURISTA"
-  ubicacion String?  // Ejemplo: "Santa Ana" o "La Libertad"
-  createdAt DateTime @default(now())
+enum Role {
+  HOST
+  TOURIST
 }
 
-// prisma/schema.prisma
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           String        @id @default(cuid())
+  fullName     String
+  age          Int
+  email        String        @unique
+  password     String
+  bio          String?
+  role         Role
+  createdAt    DateTime      @default(now())
+  
+  // Relaciones
+  bankInfo     BankInfo?
+  verification Verification?
+  experiences  Experience[]
+}
+
 model Experience {
   id              String   @id @default(cuid())
   title           String   
@@ -35,4 +48,32 @@ model Experience {
   images          String[] 
   status          String   @default("DRAFT")
   createdAt       DateTime @default(now())
+
+  hostId          String
+  host            User     @relation(fields: [hostId], references: [id])
+}
+
+model BankInfo {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  accountHolder String
+  bankName      String
+  accountType   String
+  accountNumber String
+  routingNumber String
+  createdAt     DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Verification {
+  id           String             @id @default(cuid())
+  userId       String             @unique
+  faceImage    String             // Ruta en bucket "identity-documents"
+  document     String             // Ruta en bucket "identity-documents"
+  status       VerificationStatus @default(PENDING)
+  verified     Boolean            @default(false) 
+  createdAt    DateTime           @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }

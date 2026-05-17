@@ -1,151 +1,117 @@
 import { NextResponse } from 'next/server';
-
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
 
-// Prisma 7 + PostgreSQL Adapter
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
+const globalForPrisma = global as unknown as { prisma: PrismaClient };
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
+const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-const prisma = new PrismaClient({
-  adapter,
-});
-
-async function validarConVerifik(body: any) {
+async function validarConVerifik(documentNumber: string, birthDate: string, role: string) {
+  // Asegúrate de que VERIFIK_BASE_URL en tu .env sea: https://api.verifik.co/v2
   const baseUrl = process.env.VERIFIK_BASE_URL;
   const token = process.env.VERIFIK_API_TOKEN;
 
   try {
-    let url = "";
-    let options: any = {
-      method: 'GET',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    };
+    if (role === 'HOST') {
+      if (!birthDate || !documentNumber) return { valid: false };
 
-    // HOST -> Validación DUI
-    if (body.role === 'HOST') {
-      if (!body.birthDate || !body.documentNumber) {
-        return false;
-      }
-
-      const [year, month, day] = body.birthDate.split('-');
+      const duiLimpio = documentNumber.replace(/[-\s]/g, '');
+      const [year, month, day] = birthDate.split('-');
       const fechaFormateada = `${day}/${month}/${year}`;
 
-      url = `${baseUrl}/sv/dui?documentNumber=${body.documentNumber}&dateOfBirth=${fechaFormateada}`;
-    }
-
-    // TOURIST -> OCR Pasaporte
-    else {
-      url = `${baseUrl}/ocr/passport`;
-
-      options.method = 'POST';
-
-      options.headers['Content-Type'] = 'application/json';
-
-      options.body = JSON.stringify({
-        image: body.verificationData?.document,
+      const params = new URLSearchParams({
+        documentNumber: duiLimpio,
+        dateOfBirth: fechaFormateada
       });
-    }
 
-    const response = await fetch(url, options);
+      const url = `${baseUrl}/sv/dui?${params.toString()}`;
+      console.log(`📡 Consultando Verifik v2: ${url}`);
 
-    if (!response.ok) {
-      console.error("Error HTTP Verifik:", response.status);
-      return false;
-    }
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
 
-    const result = await response.json();
+      const result = await response.json();
+      console.log("🔍 Respuesta de Verifik:", result);
 
-    console.log("Respuesta Verifik:", result);
-
-    return (
-  result?.isValid === true ||
-  result?.valid === true ||
-  result?.success === true ||
-  result?.status === 'valid' ||
-  result?.status === 'approved'
-);
-
+      /**
+       * AJUSTE DE LÓGICA:
+       * Verificamos si la respuesta fue exitosa (200 OK) Y si contiene
+       * ya sea el status 'valid' o el nombre completo (fullName).
+       */
+      if (response.ok && (result?.data?.status === 'valid' || result?.data?.fullName)) {
+        return { 
+          valid: true, 
+          fullNameOficial: result.data.fullName 
+        };
+      }
+      return { valid: false };
+    } 
+    return { valid: true, fullNameOficial: null };
   } catch (error) {
-    console.error("Error Verifik:", error);
-    return false;
+    console.error("🚨 Error Verifik:", error);
+    return { valid: false };
   }
 }
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-
-    console.log("BODY RECIBIDO:", body);
+    const { fullName, email, password, age, role, birthDate, documentNumber, verificationData } = body;
 
     // 1. Validar Identidad
-    const esValido = await validarConVerifik(body);
+    const verificacion = await validarConVerifik(documentNumber, birthDate, role);
 
-    if (!esValido) {
+    if (!verificacion.valid) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Identidad no válida",
-        },
+        { success: false, error: "La información del DUI no coincide con los registros oficiales de El Salvador." },
         { status: 400 }
       );
     }
 
-    // 2. Crear Usuario
+    // 2. Hash de contraseña
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // 3. Crear Usuario en Prisma
+    // Priorizamos el nombre que viene de la base de datos oficial (RNPN)
+    const nombreFinal = verificacion.fullNameOficial || fullName;
+
     const newUser = await prisma.user.create({
       data: {
-        fullName: body.fullName,
-        email: body.email,
-        password: body.password,
-        age: parseInt(body.age) || 0,
-
-        // IMPORTANTE:
-        // Pasamos string directo para evitar problemas
-        // con enums runtime de Prisma + Next
-        role: body.role,
-
+        fullName: nombreFinal, 
+        email: email,
+        password: hashedPassword,
+        age: parseInt(age) || 0,
+        role: role,
         verification: {
           create: {
-            faceImage:
-              body.verificationData?.faceImage || "url_pendiente",
-
-            document:
-              body.verificationData?.document || "url_pendiente",
-
-            // IMPORTANTE:
-            // string directo en vez de enum importado
-            status: 'APPROVED',
-
+            faceImage: verificationData?.facePhoto || "url_pendiente",
+            document: verificationData?.documentPhoto || "url_pendiente",
+            status: 'APPROVED', 
             verified: true,
           },
         },
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      user: newUser,
-    });
+    const { password: _, ...userWithoutPassword } = newUser;
+    return NextResponse.json({ success: true, user: userWithoutPassword });
 
   } catch (error: any) {
-
-    console.error("--- ERROR EN EL SERVIDOR ---");
-    console.error(error);
-
+    console.error("🚨 Error Registro:", error);
     return NextResponse.json(
-      {
-        success: false,
-        error:
-          error.code === 'P2002'
-            ? "El correo ya existe"
-            : "Error de inicialización de base de datos",
+      { 
+        success: false, 
+        error: error.code === 'P2002' ? "Este correo electrónico ya está registrado." : "Error interno del servidor." 
       },
       { status: 500 }
     );

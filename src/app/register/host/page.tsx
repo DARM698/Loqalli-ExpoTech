@@ -3,17 +3,55 @@ import { useState } from 'react';
 import { BasicInfoForm } from '@/components/forms/BasicInfoSection';
 import { BankInfoForm } from '@/components/forms/BankInfoSection';
 import { IdentityUpload } from '@/components/Verifications/IdentityUpload';
+import Link from 'next/link';
 
 export default function HostRegister() {
   const [formData, setFormData] = useState<any>({
-    verificationData: { faceImage: '', document: '' }
+    fullName: '',
+    email: '',
+    password: '',
+    age: '',
+    birthDate: '',
+    documentNumber: '',
+    verificationData: { 
+      facePhoto: '', 
+      documentPhoto: '' 
+    }
   });
 
+  // Manejador general para campos de texto planos de los subformularios
   const handleInputChange = (e: any) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev: any) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
+  };
+
+  // Manejador blindado para los datos controlados provenientes de IdentityUpload
+  const handleIdentityChange = (updatedFields: any) => {
+    setFormData((prev: any) => {
+      // Si vienen rutas de imágenes, actualizamos de forma segura el subobjeto anidado
+      if (updatedFields.verificationData) {
+        return {
+          ...prev,
+          verificationData: {
+            ...prev.verificationData,
+            ...updatedFields.verificationData
+          }
+        };
+      }
+      // Si vienen strings planos (birthDate o documentNumber), los acoplamos directamente
+      return {
+        ...prev,
+        ...updatedFields
+      };
+    });
   };
 
   const handleRegister = async () => {
+    // Log de control en la consola del navegador (F12) para validar el envío seguro
+    console.log("✈️ Enviando el siguiente payload al backend:", formData);
+
     try {
       const res = await fetch('/api/registro', {
         method: 'POST',
@@ -24,20 +62,22 @@ export default function HostRegister() {
         })
       });
 
-      // Validamos si la respuesta es JSON antes de parsear
       const contentType = res.headers.get("content-type");
       if (res.ok && contentType && contentType.includes("application/json")) {
         const data = await res.json();
-        if (data.success) alert("¡Registro exitoso!");
-        else alert("Error: " + data.error);
+        if (data.success) {
+          alert("¡Registro exitoso! Identidad verificada vía Verifik.");
+        } else {
+          alert("Error de Registro: " + data.error);
+        }
       } else {
         const errorText = await res.text();
-        console.error("Error del servidor:", errorText);
-        alert("Error de servidor. Revisa la terminal de VS Code.");
+        console.error("Error crudo del servidor:", errorText);
+        alert(`Error en el servidor (${res.status}). Verifica la terminal de Node.`);
       }
     } catch (err) {
-      console.error("Error reg:", err);
-      alert("No se pudo conectar con el servidor.");
+      console.error("Error de conexión:", err);
+      alert("No se pudo establecer conexión con el servidor backend.");
     }
   };
 
@@ -48,18 +88,10 @@ export default function HostRegister() {
       <BasicInfoForm onChange={handleInputChange} />
       <BankInfoForm onChange={handleInputChange} />
       
+      {/* Recibe de manera reactiva y atómica las actualizaciones del DUI/Fecha */}
       <IdentityUpload 
         role="HOST" 
-        onUpload={(data) => {
-          // Asumiendo que data trae { faceImage, document }
-          setFormData({
-            ...formData,
-            verificationData: {
-              faceImage: data.faceImage,
-              document: data.document
-            }
-          });
-        }} 
+        onChangeData={handleIdentityChange} 
       />
 
       <button 
@@ -68,6 +100,15 @@ export default function HostRegister() {
       >
         REGISTER AS HOST
       </button>
+      {/* Añade esto después del </button> en tu página de registro */}
+    <div className="mt-6 text-center">
+    <p className="text-gray-600 text-sm">
+    Already have an account?{' '}
+    <Link href="/login" className="text-[#d9774a] font-bold hover:underline">
+      Log in
+    </Link>
+  </p>
+  </div>
     </div>
   );
 }

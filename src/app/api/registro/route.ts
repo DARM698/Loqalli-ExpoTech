@@ -10,13 +10,17 @@ const adapter = new PrismaPg(pool);
 const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
-async function validarConVerifik(documentNumber: string, birthDate: string, role: string) {
-  // Asegúrate de que VERIFIK_BASE_URL en tu .env sea: https://api.verifik.co/v2
-  const baseUrl = process.env.VERIFIK_BASE_URL;
-  const token = process.env.VERIFIK_API_TOKEN;
+async function validarConVerifik(
+  documentNumber: string, 
+  birthDate: string, 
+  role: string, 
+  documentType: string = 'DUI'
+) {
+  const baseUrl = "https://prod.verifik.co/v2";
+  const token = process.env.VERIFIK_TOKEN;
 
   try {
-    if (role === 'HOST') {
+    if (role === 'HOST' || (role === 'TOURIST' && documentType === 'DUI')) {
       if (!birthDate || !documentNumber) return { valid: false };
 
       const duiLimpio = documentNumber.replace(/[-\s]/g, '');
@@ -28,36 +32,38 @@ async function validarConVerifik(documentNumber: string, birthDate: string, role
         dateOfBirth: fechaFormateada
       });
 
-      const url = `${baseUrl}/sv/dui?${params.toString()}`;
-      console.log(`📡 Consultando Verifik v2: ${url}`);
+      console.log(`📡 [1/2] Consultando RNPN para validación de datos...`);
 
-      const response = await fetch(url, {
+      const response = await fetch(`${baseUrl}/sv/dui?${params.toString()}`, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
+        signal: AbortSignal.timeout(25000) 
       });
 
       const result = await response.json();
-      console.log("🔍 Respuesta de Verifik:", result);
-
-      /**
-       * AJUSTE DE LÓGICA:
-       * Verificamos si la respuesta fue exitosa (200 OK) Y si contiene
-       * ya sea el status 'valid' o el nombre completo (fullName).
-       */
-      if (response.ok && (result?.data?.status === 'valid' || result?.data?.fullName)) {
-        return { 
-          valid: true, 
-          fullNameOficial: result.data.fullName 
-        };
+      
+      // Validar existencia del registro
+      if (!response.ok || !result?.data?.fullName) {
+        console.error("🚨 [ERROR] No se encontró el DUI en RNPN.");
+        return { valid: false, errorType: "RNPN_RECORD_NOT_FOUND" };
       }
-      return { valid: false };
+
+      const fullNameOficial = result.data.fullName;
+
+      console.log(`✨ [2/2] VALIDACIÓN EXITOSA CON RNPN`);
+      return { valid: true, fullNameOficial };
     } 
+    
+    // Para pasaportes u otros casos no implementados aún
     return { valid: true, fullNameOficial: null };
-  } catch (error) {
-    console.error("🚨 Error Verifik:", error);
+  } catch (error: any) {
+    if (error.name === 'TimeoutError' || error.code === 'UND_ERR_CONNECT_TIMEOUT') {
+      return { valid: false, errorType: "CONNECTION_TIMEOUT" };
+    }
+    console.error("🚨 [CRITICAL ERROR]:", error);
     return { valid: false };
   }
 }
@@ -65,24 +71,45 @@ async function validarConVerifik(documentNumber: string, birthDate: string, role
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { fullName, email, password, age, role, birthDate, documentNumber, verificationData } = body;
+    const { fullName, email, password, age, role, birthDate, documentNumber, documentType, verificationData } = body;
 
-    // 1. Validar Identidad
-    const verificacion = await validarConVerifik(documentNumber, birthDate, role);
+    console.log(`📝 Iniciando proceso de registro para: ${email}`);
 
-    if (!verificacion.valid) {
+    // --- BLOQUE DE AUDITORÍA LOGS EN CONSOLA DEL SERVIDOR ---
+    if (!fullName || !email || !password || !age || !birthDate || !documentNumber) {
+      console.log("🔍 [AUDITORÍA DE CAMPOS RECIBIDOS]:", {
+        fullName: fullName ? "✅ PROVISTO" : "❌ VACÍO",
+        email: email ? "✅ PROVISTO" : "❌ VACÍO",
+        password: password ? "✅ PROVISTO" : "❌ VACÍO",
+        age: age ? "✅ PROVISTO" : "❌ VACÍO",
+        birthDate: birthDate ? "✅ PROVISTO" : "❌ VACÍO",
+        documentNumber: documentNumber ? "✅ PROVISTO" : "❌ VACÍO",
+      });
+      
       return NextResponse.json(
-        { success: false, error: "La información del DUI no coincide con los registros oficiales de El Salvador." },
+        { success: false, error: "Faltan campos obligatorios en el formulario." }, 
         { status: 400 }
       );
     }
 
-    // 2. Hash de contraseña
+    const verificacion = await validarConVerifik(documentNumber, birthDate, role, documentType);
+
+    // Si la validación de datos falla, se detiene el POST
+    if (!verificacion.valid) {
+      let errorMsg = "La verificación de identidad ha fallado.";
+      
+      if (verificacion.errorType === "RNPN_RECORD_NOT_FOUND") {
+        errorMsg = "❌ Los datos del DUI no coinciden con los registros oficiales.";
+      } else if (verificacion.errorType === "CONNECTION_TIMEOUT") {
+        errorMsg = "⚠️ Error de conexión con el servicio de identidad. Intenta de nuevo.";
+      }
+      
+      return NextResponse.json({ success: false, error: errorMsg }, { status: 400 });
+    }
+
+    // Si pasó la prueba, procedemos con el guardado
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-
-    // 3. Crear Usuario en Prisma
-    // Priorizamos el nombre que viene de la base de datos oficial (RNPN)
     const nombreFinal = verificacion.fullNameOficial || fullName;
 
     const newUser = await prisma.user.create({
@@ -94,7 +121,6 @@ export async function POST(request: Request) {
         role: role,
         verification: {
           create: {
-            faceImage: verificationData?.facePhoto || "url_pendiente",
             document: verificationData?.documentPhoto || "url_pendiente",
             status: 'APPROVED', 
             verified: true,
@@ -103,15 +129,16 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log("✅ Usuario verificado y creado con éxito.");
     const { password: _, ...userWithoutPassword } = newUser;
     return NextResponse.json({ success: true, user: userWithoutPassword });
 
   } catch (error: any) {
-    console.error("🚨 Error Registro:", error);
+    console.error("🚨 [DATABASE ERROR]:", error);
     return NextResponse.json(
       { 
         success: false, 
-        error: error.code === 'P2002' ? "Este correo electrónico ya está registrado." : "Error interno del servidor." 
+        error: error.code === 'P2002' ? "Este correo ya existe." : "Error interno del servidor." 
       },
       { status: 500 }
     );

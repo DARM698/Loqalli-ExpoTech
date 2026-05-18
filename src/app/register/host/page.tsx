@@ -13,13 +13,16 @@ export default function HostRegister() {
     age: '',
     birthDate: '',
     documentNumber: '',
+    accountHolder: '',
+    bankName: '',
+    accountNumber: '',
+    routingNumber: '',
     verificationData: { 
       facePhoto: '', 
       documentPhoto: '' 
     }
   });
 
-  // Manejador general para campos de texto planos de los subformularios
   const handleInputChange = (e: any) => {
     setFormData((prev: any) => ({
       ...prev,
@@ -27,10 +30,8 @@ export default function HostRegister() {
     }));
   };
 
-  // Manejador blindado para los datos controlados provenientes de IdentityUpload
   const handleIdentityChange = (updatedFields: any) => {
     setFormData((prev: any) => {
-      // Si vienen rutas de imágenes, actualizamos de forma segura el subobjeto anidado
       if (updatedFields.verificationData) {
         return {
           ...prev,
@@ -40,7 +41,6 @@ export default function HostRegister() {
           }
         };
       }
-      // Si vienen strings planos (birthDate o documentNumber), los acoplamos directamente
       return {
         ...prev,
         ...updatedFields
@@ -49,8 +49,16 @@ export default function HostRegister() {
   };
 
   const handleRegister = async () => {
-    // Log de control en la consola del navegador (F12) para validar el envío seguro
-    console.log("✈️ Enviando el siguiente payload al backend:", formData);
+    // 1. VALIDACIÓN: Se eliminó !formData.verificationData.facePhoto de los requisitos
+    if (
+      !formData.fullName || !formData.email || !formData.password || !formData.age ||
+      !formData.birthDate || !formData.documentNumber || !formData.accountHolder ||
+      !formData.bankName || !formData.accountNumber || !formData.routingNumber ||
+      !formData.verificationData.documentPhoto
+    ) {
+      alert("Por favor, completa todos los campos del formulario, incluyendo la foto de tu documento.");
+      return;
+    }
 
     try {
       const res = await fetch('/api/registro', {
@@ -65,19 +73,21 @@ export default function HostRegister() {
       const contentType = res.headers.get("content-type");
       if (res.ok && contentType && contentType.includes("application/json")) {
         const data = await res.json();
+        
         if (data.success) {
-          alert("¡Registro exitoso! Identidad verificada vía Verifik.");
+          alert("¡Registro exitoso! Tu identidad ha sido verificada correctamente.");
+          window.location.href = '/login';
         } else {
-          alert("Error de Registro: " + data.error);
+          alert("Error de Verificación: " + data.error);
         }
       } else {
         const errorText = await res.text();
         console.error("Error crudo del servidor:", errorText);
-        alert(`Error en el servidor (${res.status}). Verifica la terminal de Node.`);
+        alert("Ocurrió un problema técnico en el servidor. Revisa la consola.");
       }
     } catch (err) {
       console.error("Error de conexión:", err);
-      alert("No se pudo establecer conexión con el servidor backend.");
+      alert("No se pudo conectar con el servidor. Revisa tu conexión a internet.");
     }
   };
 
@@ -85,30 +95,42 @@ export default function HostRegister() {
     <div className="max-w-xl mx-auto p-8 bg-[#faf7f2] min-h-screen">
       <h1 className="text-4xl text-center mb-10 text-orange-700 font-serif">Create Your Host Account!</h1>
       
-      <BasicInfoForm onChange={handleInputChange} />
-      <BankInfoForm onChange={handleInputChange} />
-      
-      {/* Recibe de manera reactiva y atómica las actualizaciones del DUI/Fecha */}
-      <IdentityUpload 
-        role="HOST" 
-        onChangeData={handleIdentityChange} 
-      />
+      <div className="space-y-8">
+        <BasicInfoForm onChange={handleInputChange} />
+        
+        <hr className="border-orange-100" />
+        
+        <BankInfoForm onChange={handleInputChange} />
+        
+        <hr className="border-orange-100" />
+        
+        <div className="bg-white p-6 rounded-lg shadow-sm border border-orange-50">
+          <h2 className="text-xl font-bold text-orange-800 mb-4">Identity Verification</h2>
+          <p className="text-sm text-gray-600 mb-6">
+            Por favor, sube una imagen legible de tu documento de identidad para realizar la validación con los registros oficiales.
+          </p>
+          <IdentityUpload 
+            role="HOST" 
+            onChangeData={handleIdentityChange} 
+          />
+        </div>
+      </div>
 
       <button 
         onClick={handleRegister} 
-        className="w-full bg-[#d9774a] text-white p-4 mt-12 rounded font-bold tracking-widest hover:bg-[#c4663d] transition-colors"
+        className="w-full bg-[#d9774a] text-white p-4 mt-12 rounded font-bold tracking-widest hover:bg-[#c4663d] transition-all shadow-md active:scale-[0.98]"
       >
         REGISTER AS HOST
       </button>
-      {/* Añade esto después del </button> en tu página de registro */}
-    <div className="mt-6 text-center">
-    <p className="text-gray-600 text-sm">
-    Already have an account?{' '}
-    <Link href="/login" className="text-[#d9774a] font-bold hover:underline">
-      Log in
-    </Link>
-  </p>
-  </div>
+
+      <div className="mt-8 text-center pb-10">
+        <p className="text-gray-600 text-sm">
+          Already have an account?{' '}
+          <Link href="/login" className="text-[#d9774a] font-bold hover:underline">
+            Log in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -13,14 +13,14 @@ model User {
   email        String        @unique
   password     String
   bio          String?
-  profileImage String?       // <-- AÑADIDO: Para la foto de perfil después del login
+  profileImage String?       // Foto opcional para el apartado de perfil en el website
   role         Role
   createdAt    DateTime      @default(now())
   bankInfo     BankInfo?
   Booking      Booking[]
   experiences  Experience[]
   verification Verification?
-  transactions Transaction[] // <-- AÑADIDO: Relación con las transacciones donde participa el usuario
+  transactions Transaction[] // Relación con las transacciones donde participa el usuario
 }
 
 model Experience {
@@ -68,7 +68,7 @@ model Verification {
 }
 
 model Booking {
-  id           String        @id @default(cuid()) // Añadido default cuid() por consistencia
+  id           String        @id @default(cuid())
   date         String
   time         String
   guests       Int
@@ -78,10 +78,9 @@ model Booking {
   touristId    String
   Experience   Experience    @relation(fields: [experienceId], references: [id])
   User         User          @relation(fields: [touristId], references: [id])
-  Transaction  Transaction[] // <-- AÑADIDO: Una reserva puede gatillar transacciones
+  Transaction  Transaction[]
 }
 
-// <-- NUEVO MODELO: Para controlar los flujos de dinero (5% y 95%)
 model Transaction {
   id              String            @id @default(cuid())
   bookingId       String
@@ -89,12 +88,12 @@ model Transaction {
   touristId       String
   tourist         User              @relation(fields: [touristId], references: [id])
   
-  totalAmount     Float             // Monto total pagado por el turista (Ej: $100)
-  loqalliFee      Float             // Tu 5% (Ej: $5)
-  hostPayout      Float             // El 95% para el host (Ej: $95)
+  totalAmount     Float             // Monto total pagado por el turista
+  loqalliFee      Float             // Comisión de Loqalli (5%)
+  hostPayout      Float             // Pago al host (95%)
   
   paymentStatus   TransactionStatus @default(PENDING)
-  payoutStatus    PayoutStatus      @default(NOT_APPLICABLE) // Para controlar si ya le transferiste al Host
+  payoutStatus    PayoutStatus      @default(NOT_APPLICABLE)
   
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -122,7 +121,6 @@ enum PaymentMethod {
   TRANSFER
 }
 
-// <-- NUEVOS ENUMS: Para la lógica de negocio del dinero
 enum TransactionStatus {
   PENDING
   COMPLETED
@@ -131,7 +129,7 @@ enum TransactionStatus {
 }
 
 enum PayoutStatus {
-  NOT_APPLICABLE // Si el host eligió CASH, Loqalli no tiene que transferirle nada.
-  PENDING        // Si es TRANSFER, queda pendiente hasta que tu sistema/pasarela le pague.
-  PAID           // Ya se le envió su 95%.
+  NOT_APPLICABLE
+  PENDING        
+  PAID           
 }

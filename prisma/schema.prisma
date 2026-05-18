@@ -6,17 +6,6 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
-  HOST
-  TOURIST
-}
-
-enum VerificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model User {
   id           String        @id @default(cuid())
   fullName     String
@@ -26,29 +15,26 @@ model User {
   bio          String?
   role         Role
   createdAt    DateTime      @default(now())
-  
-  // Relaciones
   bankInfo     BankInfo?
-  verification Verification?
   experiences  Experience[]
+  verification Verification?
 }
 
 model Experience {
   id              String   @id @default(cuid())
-  title           String   
-  category        String   
-  description     String   @db.Text 
-  pricePerPerson  Float    
-  maxParticipants Int      
-  address         String   
+  title           String
+  category        String
+  description     String
+  pricePerPerson  Float
+  maxParticipants Int
+  address         String
   lat             Float?
   lng             Float?
-  days            String[] 
-  slots           String[] 
-  images          String[] 
+  days            String[]
+  slots           String[]
+  images          String[]
   status          String   @default("DRAFT")
   createdAt       DateTime @default(now())
-
   hostId          String
   host            User     @relation(fields: [hostId], references: [id])
 }
@@ -62,18 +48,27 @@ model BankInfo {
   accountNumber String
   routingNumber String
   createdAt     DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id])
+  user          User     @relation(fields: [userId], references: [id])
 }
 
 model Verification {
-  id           String             @id @default(cuid())
-  userId       String             @unique
-  faceImage    String             // Ruta en bucket "identity-documents"
-  document     String             // Ruta en bucket "identity-documents"
-  status       VerificationStatus @default(PENDING)
-  verified     Boolean            @default(false) 
-  createdAt    DateTime           @default(now())
+  id        String             @id @default(cuid())
+  userId    String             @unique
+  faceImage String
+  document  String
+  status    VerificationStatus @default(PENDING)
+  verified  Boolean            @default(false)
+  createdAt DateTime           @default(now())
+  user      User               @relation(fields: [userId], references: [id])
+}
 
-  user User @relation(fields: [userId], references: [id])
+enum Role {
+  HOST
+  TOURIST
+}
+
+enum VerificationStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }

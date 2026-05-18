@@ -27,17 +27,22 @@ model User {
   role         Role
   createdAt    DateTime      @default(now())
   
-  // Relaciones
   bankInfo     BankInfo?
   verification Verification?
   experiences  Experience[]
+  bookings     Booking[]     
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
 }
 
 model Experience {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   title           String   
   category        String   
-  description     String   @db.Text 
+  description     String        @db.Text 
   pricePerPerson  Float    
   maxParticipants Int      
   address         String   
@@ -46,11 +51,14 @@ model Experience {
   days            String[] 
   slots           String[] 
   images          String[] 
-  status          String   @default("DRAFT")
-  createdAt       DateTime @default(now())
+  status          String        @default("DRAFT")
+  createdAt       DateTime      @default(now())
+
+  paymentMethod   PaymentMethod @default(CASH)
 
   hostId          String
-  host            User     @relation(fields: [hostId], references: [id])
+  host            User          @relation(fields: [hostId], references: [id])
+  bookings        Booking[] 
 }
 
 model BankInfo {
@@ -66,14 +74,36 @@ model BankInfo {
   user User @relation(fields: [userId], references: [id])
 }
 
-model Verification {
-  id           String             @id @default(cuid())
-  userId       String             @unique
-  faceImage    String             // Ruta en bucket "identity-documents"
-  document     String             // Ruta en bucket "identity-documents"
-  status       VerificationStatus @default(PENDING)
-  verified     Boolean            @default(false) 
-  createdAt    DateTime           @default(now())
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
 
-  user User @relation(fields: [userId], references: [id])
+model Booking {
+  id           String        @id @default(cuid())
+  date         String        
+  time         String        
+  guests       Int           
+  status       BookingStatus @default(PENDING)
+  createdAt    DateTime      @default(now())
+
+  experienceId String
+  experience   Experience    @relation(fields: [experienceId], references: [id])
+
+  touristId    String
+  tourist      User          @relation(fields: [touristId], references: [id])
+}
+
+model Verification {
+  id        String             @id @default(cuid())
+  status    VerificationStatus @default(PENDING)
+  userId    String             @unique
+  user      User               @relation(fields: [userId], references: [id])
+  createdAt DateTime           @default(now())
+
+  // Añadimos los campos reales para que coincida exactamente con Supabase:
+  document  String?            // O String, Prisma nos avisará si es obligatorio
+  faceImage String?
+  verified  Boolean            @default(false)
 }

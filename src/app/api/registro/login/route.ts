@@ -3,12 +3,17 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
+import { SignJWT } from 'jose'; // Usamos 'jose' porque corre nativamente en Edge runtime
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
+);
 
 export async function POST(request: Request) {
   try {
@@ -22,13 +27,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. Buscar al usuario por correo electrónico (Modo Insensitive)
-    // Cambiamos findUnique por findFirst para usar la comparación flexible
     const user = await prisma.user.findFirst({
       where: {
         email: {
           equals: email,
-          mode: 'insensitive', // Ignora mayúsculas/minúsculas en la búsqueda
+          mode: 'insensitive',
         },
       },
     });
@@ -40,7 +43,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Validar que la contraseña coincida usando bcrypt
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
@@ -50,16 +52,37 @@ export async function POST(request: Request) {
       );
     }
 
-    // Devolvemos el éxito y el rol para manejar la redirección en el cliente (Loqalli logic)
-    return NextResponse.json({
+    // 🌟 CREACIÓN DEL TOKEN JWT SEGÚN ROLES
+    const token = await new SignJWT({ 
+        id: user.id, 
+        email: user.email, 
+        role: user.role 
+      })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('1d') // Expira en 1 día
+      .sign(JWT_SECRET);
+
+    const response = NextResponse.json({
       success: true,
       user: {
         id: user.id,
         fullName: user.fullName,
         email: user.email,
-        role: user.role, // HOST o TOURIST
+        role: user.role,
       }
     });
+
+    // 🌟 GUARDAR EL TOKEN EN UNA COOKIE HTTP-ONLY SEGURA
+    response.cookies.set('session_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24, // 1 día en segundos
+      path: '/',
+    });
+
+    return response;
 
   } catch (error) {
     console.error("🚨 [LOGIN ERROR]:", error);

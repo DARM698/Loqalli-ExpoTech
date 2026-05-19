@@ -126,7 +126,7 @@ export default function HostRegister() {
       <div className="mt-8 text-center pb-10">
         <p className="text-gray-600 text-sm">
           Already have an account?{' '}
-          <Link href="/login" className="text-[#d9774a] font-bold hover:underline">
+          <Link href="/Login/login-host" className="text-[#d9774a] font-bold hover:underline">
             Log in
           </Link>
         </p>

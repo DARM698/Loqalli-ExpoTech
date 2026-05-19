@@ -120,7 +120,7 @@ export default function TouristRegister() {
       <div className="mt-8 text-center pb-10">
         <p className="text-gray-600 text-sm">
           Already have an account?{' '}
-          <Link href="/Login" className="text-[#d9774a] font-bold hover:underline">
+          <Link href="/Login/login-tourist" className="text-[#d9774a] font-bold hover:underline">
             Log in
           </Link>
         </p>

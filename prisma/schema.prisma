@@ -15,9 +15,11 @@ model User {
   bio          String?
   role         Role
   createdAt    DateTime      @default(now())
+  profileImage String?
   bankInfo     BankInfo?
   Booking      Booking[]
   experiences  Experience[]
+  Transaction  Transaction[]
   verification Verification?
 }
 
@@ -76,6 +78,22 @@ model Booking {
   touristId    String
   Experience   Experience    @relation(fields: [experienceId], references: [id])
   User         User          @relation(fields: [touristId], references: [id])
+  Transaction  Transaction[]
+}
+
+model Transaction {
+  id            String            @id
+  bookingId     String
+  touristId     String
+  totalAmount   Float
+  loqalliFee    Float
+  hostPayout    Float
+  paymentStatus TransactionStatus @default(PENDING)
+  payoutStatus  PayoutStatus      @default(NOT_APPLICABLE)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime
+  Booking       Booking           @relation(fields: [bookingId], references: [id])
+  User          User              @relation(fields: [touristId], references: [id])
 }
 
 enum Role {
@@ -98,4 +116,17 @@ enum BookingStatus {
 enum PaymentMethod {
   CASH
   TRANSFER
+}
+
+enum PayoutStatus {
+  NOT_APPLICABLE
+  PENDING
+  PAID
+}
+
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
 }

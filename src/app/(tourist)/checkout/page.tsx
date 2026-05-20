@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+
 export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] =
 useState("card");
@@ -22,6 +23,10 @@ const handleReservation = () => {
   if (paymentMethod === "cash") {
 
     router.push("/cash-receipt");
+
+  } else {
+
+    router.push("/pagoexitoso");
 
   }
 
@@ -359,11 +364,11 @@ const handleReservation = () => {
       {/* Button */}
       <button
       onClick={handleReservation}
-     className="w-full bg-orange-600 text-white py-4 rounded-xl hover:bg-orange-700 transition">
+      className="w-full bg-orange-600 text-white py-4 rounded-xl hover:bg-orange-700 transition">
 
-        Complete Reservation
+      Complete Reservation
 
-      </button>
+    </button>
       {/* Host */}
       <div className="mt-6 border-t pt-4">
 

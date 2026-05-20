@@ -13,14 +13,14 @@ model User {
   email        String        @unique
   password     String
   bio          String?
-  profileImage String?       // Foto opcional para el apartado de perfil en el website
   role         Role
   createdAt    DateTime      @default(now())
+  profileImage String?
   bankInfo     BankInfo?
   Booking      Booking[]
   experiences  Experience[]
+  transactions Transaction[]
   verification Verification?
-  transactions Transaction[] // Relación con las transacciones donde participa el usuario
 }
 
 model Experience {
@@ -35,6 +35,8 @@ model Experience {
   lng             Float?
   days            String[]
   slots           String[]
+  startTime       String?       // Formato sugerido: "09:00"
+  endTime         String?       // Formato sugerido: "18:00"
   images          String[]
   status          String        @default("DRAFT")
   createdAt       DateTime      @default(now())
@@ -82,21 +84,18 @@ model Booking {
 }
 
 model Transaction {
-  id              String            @id @default(cuid())
-  bookingId       String
-  booking         Booking           @relation(fields: [bookingId], references: [id])
-  touristId       String
-  tourist         User              @relation(fields: [touristId], references: [id])
-  
-  totalAmount     Float             // Monto total pagado por el turista
-  loqalliFee      Float             // Comisión de Loqalli (5%)
-  hostPayout      Float             // Pago al host (95%)
-  
-  paymentStatus   TransactionStatus @default(PENDING)
-  payoutStatus    PayoutStatus      @default(NOT_APPLICABLE)
-  
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id            String            @id @default(cuid())
+  bookingId     String
+  touristId     String
+  totalAmount   Float
+  loqalliFee    Float
+  hostPayout    Float
+  paymentStatus TransactionStatus @default(PENDING)
+  payoutStatus  PayoutStatus      @default(NOT_APPLICABLE)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  booking       Booking           @relation(fields: [bookingId], references: [id])
+  tourist       User              @relation(fields: [touristId], references: [id])
 }
 
 enum Role {
@@ -130,6 +129,6 @@ enum TransactionStatus {
 
 enum PayoutStatus {
   NOT_APPLICABLE
-  PENDING        
-  PAID           
+  PENDING
+  PAID
 }

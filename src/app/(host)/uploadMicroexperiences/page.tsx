@@ -1,11 +1,11 @@
 'use client';
-import { useState, useEffect, useRef } from 'react'; // 1. Añadimos useRef
+import { useState, useEffect, useRef } from 'react';
 import { createExperience } from '../../actions';
 import dynamic from 'next/dynamic';
 import HostNavbar from '@/components/shared/navbar';
 import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation'; // 2. Añadimos useRouter
+import { useRouter } from 'next/navigation';
 import 'react-day-picker/dist/style.css';
 
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
@@ -38,8 +38,8 @@ const calendarStyles = `
 `;
 
 export default function CreateExperiencePage() {
-  const router = useRouter(); // Inicializamos el router
-  const formRef = useRef<HTMLFormElement>(null); // Referencia para resetear el form
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   
@@ -49,6 +49,9 @@ export default function CreateExperiencePage() {
   const [isStartOpen, setIsStartOpen] = useState(false);
   const [endPeriod, setEndPeriod] = useState("PM");
   const [isEndOpen, setIsEndOpen] = useState(false);
+
+  // 🌟 Estado para el método de pago que empata con tu Enum en Prisma
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH");
 
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [location, setLocation] = useState({ lat: 13.689, lng: -89.187 });
@@ -60,10 +63,10 @@ export default function CreateExperiencePage() {
     setMounted(true); 
   }, []);
 
-  // Función para limpiar todos los campos
   const clearForm = () => {
-    formRef.current?.reset(); // Limpia inputs nativos (title, description, price...)
+    formRef.current?.reset();
     setCategory("Ceramics & Pottery");
+    setPaymentMethod("CASH");
     setSelectedDates([]);
     setImageFiles([]);
     setPreviews([]);
@@ -99,6 +102,9 @@ export default function CreateExperiencePage() {
       formData.append('startPeriod', startPeriod);
       formData.append('endPeriod', endPeriod);
       
+      // 🌟 Añadimos el método de pago seleccionado al envío
+      formData.append('paymentMethod', paymentMethod);
+      
       const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
       formData.append('selectedDays', JSON.stringify(formattedDates)); 
       
@@ -115,10 +121,8 @@ export default function CreateExperiencePage() {
         return;
       }
 
-      // Si todo sale bien:
-      clearForm(); // 1. Limpiamos campos
-      router.push('/explore'); // 2. Redirigimos
-      
+      clearForm();
+      router.push('/explore');
     } 
     catch (error) { 
       console.error("Error fatal en el cliente:", error); 
@@ -189,8 +193,8 @@ export default function CreateExperiencePage() {
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
               <textarea name="description" required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input name="price" required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass}`} />
-                <input name="participants" required type="number" placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass}`} />
+                <input name="price" required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
+                <input name="participants" required type="number" placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
               </div>
             </section>
 
@@ -235,44 +239,84 @@ export default function CreateExperiencePage() {
                 </p>
               </section>
 
-              {/* SECCIÓN SCHEDULE */}
-              <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
-                <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule</h2>
-                <div className="space-y-4 mt-4">
-                  {[ {label: 'From', state: startPeriod, setState: setStartPeriod, open: isStartOpen, setOpen: setIsStartOpen, hName: 'startHour', mName: 'startMin'},
-                     {label: 'To', state: endPeriod, setState: setEndPeriod, open: isEndOpen, setOpen: setIsEndOpen, hName: 'endHour', mName: 'endMin'}
-                  ].map((time, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <span className="text-xs font-bold text-gray-400 w-12 uppercase">{time.label}</span>
-                      <div className="flex bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg overflow-visible flex-1">
-                        <input name={time.hName} type="number" defaultValue={9} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
-                        <span className="flex items-center text-[#D2693E] font-bold">:</span>
-                        <input name={time.mName} type="number" defaultValue={0} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
-                        
-                        <div className="relative">
-                          <div 
-                            onClick={() => time.setOpen(!time.open)}
-                            className="bg-[#D2693E] text-white text-xs font-bold px-4 h-full flex items-center cursor-pointer min-w-[60px] justify-center hover:bg-[#b05832] transition-colors"
-                          >
-                            {time.state}
-                          </div>
-                          {time.open && (
-                            <div className="absolute right-0 top-full mt-1 bg-white border border-[#F3D9CF] rounded shadow-xl z-[60] overflow-hidden">
-                              {["AM", "PM"].map(p => (
-                                <div 
-                                  key={p} 
-                                  onClick={() => { time.setState(p); time.setOpen(false); }}
-                                  className="px-4 py-2 text-[#4A3933] hover:bg-[#F3D9CF] cursor-pointer"
-                                >
-                                  {p}
-                                </div>
-                              ))}
+              {/* SECCIÓN SCHEDULE & PAYMENT METHOD */}
+              <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col justify-between">
+                <div>
+                  <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule & Payout</h2>
+                  <div className="space-y-4 mt-4">
+                    {[ {label: 'From', state: startPeriod, setState: setStartPeriod, open: isStartOpen, setOpen: setIsStartOpen, hName: 'startHour', mName: 'startMin'},
+                       {label: 'To', state: endPeriod, setState: setEndPeriod, open: isEndOpen, setOpen: setIsEndOpen, hName: 'endHour', mName: 'endMin'}
+                    ].map((time, i) => (
+                      <div key={i} className="flex items-center gap-4">
+                        <span className="text-xs font-bold text-gray-400 w-12 uppercase">{time.label}</span>
+                        <div className="flex bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg overflow-visible flex-1">
+                          
+                          {/* Input Hora Separado */}
+                          <input name={time.hName} type="number" min={1} max={12} defaultValue={time.label === 'From' ? 9 : 12} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
+                          <span className="flex items-center text-[#D2693E] font-bold">:</span>
+                          
+                          {/* Input Minutos Separado */}
+                          <input name={time.mName} type="number" min={0} max={59} defaultValue={0} placeholder="00" className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
+                          
+                          <div className="relative">
+                            <div 
+                              onClick={() => time.setOpen(!time.open)}
+                              className="bg-[#D2693E] text-white text-xs font-bold px-4 h-full flex items-center cursor-pointer min-w-[60px] justify-center hover:bg-[#b05832] transition-colors rounded-r-lg"
+                            >
+                              {time.state}
                             </div>
-                          )}
+                            {time.open && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border border-[#F3D9CF] rounded shadow-xl z-[60] overflow-hidden">
+                                {["AM", "PM"].map(p => (
+                                  <div 
+                                    key={p} 
+                                    onClick={() => { time.setState(p); time.setOpen(false); }}
+                                    className="px-4 py-2 text-[#4A3933] hover:bg-[#F3D9CF] cursor-pointer"
+                                  >
+                                    {p}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+
+                {/* 🌟 APARTADO DE MÉTODO DE PAGO (CASH O TRANSFERENCIA) */}
+                <div className="mt-6 pt-4 border-t border-[#F3D9CF]/60 space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Preferred Payment Method</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    
+                    {/* Opción Cash */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("CASH")}
+                      className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center gap-2 outline-none
+                        ${paymentMethod === "CASH" 
+                          ? "bg-[#D2693E] text-white border-[#D2693E] shadow-sm ring-2 ring-[#D2693E]/20" 
+                          : "bg-[#F3D9CF]/10 text-[#4A3933] border-[#F3D9CF] hover:bg-[#F3D9CF]/30"
+                        }`}
+                    >
+                      <span className="text-base"></span> Cash
+                    </button>
+
+                    {/* Opción Transferencia */}
+                    <button
+                      type="button"
+                      onClick={() => setPaymentMethod("TRANSFER")}
+                      className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center gap-2 outline-none
+                        ${paymentMethod === "TRANSFER" 
+                          ? "bg-[#D2693E] text-white border-[#D2693E] shadow-sm ring-2 ring-[#D2693E]/20" 
+                          : "bg-[#F3D9CF]/10 text-[#4A3933] border-[#F3D9CF] hover:bg-[#F3D9CF]/30"
+                        }`}
+                    >
+                      <span className="text-base"></span> Bank Transfer
+                    </button>
+
+                  </div>
                 </div>
               </section>
             </div>
@@ -293,7 +337,6 @@ export default function CreateExperiencePage() {
 
             {/* FOOTER CON LOS DOS BOTONES */}
             <footer className="flex justify-end gap-4 pt-4 items-center">
-              {/* Botón de Cancelar / Ir al Catálogo */}
               <button 
                 type="button" 
                 onClick={() => router.push('/explore')}
@@ -302,7 +345,6 @@ export default function CreateExperiencePage() {
                 View  
               </button>
 
-              {/* Botón de Publicar */}
               <button 
                 disabled={loading}
                 type="submit" 

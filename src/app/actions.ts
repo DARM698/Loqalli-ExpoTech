@@ -3,31 +3,48 @@
 import { prisma } from '@/lib/prisma';
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
+// Importamos el Enum directo de Prisma para mantener el tipado estricto
+import { PaymentMethod } from '@prisma/client';
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
+);
 
 export async function createExperience(formData: FormData) {
   try {
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) {
-      throw new Error("User not authenticated");
+    // 🌟 LEER COOKIE DE SESIÓN PROPIA EN LUGAR DE SUPABASE AUTH
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session_token')?.value;
+
+    if (!token) {
+      throw new Error("No estás autenticado. Por favor inicia sesión de nuevo.");
+    }
+
+    // Verificar y decodificar el token para extraer el ID del usuario
+    let userId: string;
+    try {
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      userId = payload.id as string;
+    } catch (e) {
+      throw new Error("Tu sesión ha expirado o es inválida.");
     }
 
     const imageFiles = formData.getAll('images') as File[];
     const imageUrls: string[] = [];
 
-    // LÓGICA DE SUBIDA A SUPABASE BUCKET
+    // LÓGICA DE SUBIDA A SUPABASE BUCKET (Se mantiene idéntica e intacta)
     for (const file of imageFiles) {
-      // Si el campo está vacío o no es un archivo válido, saltar
       if (!file || file.size === 0) continue;
 
-      // 1. Crear un nombre único y limpio (sin espacios ni caracteres raros)
       const fileExtension = file.name.split('.').pop();
       const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExtension}`;
       
-
       const { data, error: uploadError } = await supabase.storage
         .from('experiences') 
         .upload(cleanFileName, file, {
-          contentType: file.type, // Importante para que el navegador la renderice
+          contentType: file.type,
           upsert: false
         });
 
@@ -36,7 +53,6 @@ export async function createExperience(formData: FormData) {
         throw new Error(`Error al subir imagen: ${uploadError.message}`);
       }
 
-      // 3. Obtener la URL pública real
       const { data: { publicUrl } } = supabase.storage
         .from('experiences')
         .getPublicUrl(cleanFileName);
@@ -44,7 +60,13 @@ export async function createExperience(formData: FormData) {
       imageUrls.push(publicUrl);
     }
 
-    // 4. Guardado en la Base de Datos con Prisma
+    // 🌟 EXTRAER Y VALIDAR EL MÉTODO DE PAGO DEL FORMULARIO
+    const rawPaymentMethod = formData.get('paymentMethod') as string;
+    const paymentMethod: PaymentMethod = rawPaymentMethod === 'TRANSFER' 
+      ? PaymentMethod.TRANSFER 
+      : PaymentMethod.CASH;
+
+    // 4. Guardado en la Base de Datos asociándolo con el id decodificado del JWT
     await prisma.experience.create({
       data: {
         title: formData.get('title') as string,
@@ -59,13 +81,16 @@ export async function createExperience(formData: FormData) {
         slots: [`${formData.get('startHour')}:${formData.get('startMin')} ${formData.get('startPeriod')} - ${formData.get('endHour')}:${formData.get('endMin')} ${formData.get('endPeriod')}`], 
         images: imageUrls, 
         status: 'PUBLISHED',
+        
+        // 🌟 AQUÍ ESTÁ EL CAMBIO: Inyectamos el método de pago mapeado en el objeto de datos
+        paymentMethod: paymentMethod,
+
         host: {
-          connect: { id: user.id },
+          connect: { id: userId }, // Utiliza el ID extraído de la sesión JWT
         },
       },
     });
 
-    // 5. Revalidar para que aparezca la nueva experiencia en el Home
     revalidatePath('/');
     return { success: true };
 

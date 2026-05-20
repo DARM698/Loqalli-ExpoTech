@@ -1,4 +1,81 @@
+"use client";
+import jsPDF from "jspdf";
 export default function pagoexitoso() {
+
+  const downloadReceipt = () => {
+
+  const doc = new jsPDF();
+
+  doc.setFontSize(20);
+  doc.text(
+    "Booking Confirmed",
+    20,
+    20
+  );
+
+  doc.setFontSize(12);
+
+  doc.text(
+    "Your place at the loom is reserved. See you soon!",
+    20,
+    30
+  );
+
+  doc.setFontSize(16);
+
+  doc.text(
+    "Ancestral Indigo Workshop",
+    20,
+    50
+  );
+
+  doc.setFontSize(12);
+
+  doc.text(
+    "Date: May 14, 2024",
+    20,
+    65
+  );
+
+  doc.text(
+    "Hour: 09:30 AM - 12:30 PM",
+    20,
+    75
+  );
+
+  doc.text(
+    "Location: Suchitoto Art Collective, El Salvador",
+    20,
+    85
+  );
+
+  doc.text(
+    "Guests: 2",
+    20,
+    95
+  );
+
+  doc.setFontSize(16);
+
+  doc.text(
+    "TOTAL PAID: $30",
+    20,
+    115
+  );
+
+  doc.text(
+    "Hosted by: Nina Mary",
+    20,
+    130
+  );
+
+  doc.save(
+    "booking-confirmation.pdf"
+  );
+
+};
+
+
   return (
     <main className="min-h-screen bg-[#FFFFFF] py-10 px-6">
 
@@ -75,7 +152,7 @@ export default function pagoexitoso() {
         </p>
 
         <h3 className="text-2xl font-bold text-[#2E2A27]">
-          $80
+          $30
         </h3>
 
       </div>
@@ -143,7 +220,9 @@ export default function pagoexitoso() {
         <div className="flex flex-col md:flex-row gap-4 justify-center mb-16">
 
         {/* Download Button */}
-        <button className="bg-[#DA653B] hover:bg-orange-800 transition text-white px-8 py-3 rounded-xl font-medium">
+        <button
+        onClick={downloadReceipt}
+        className="bg-[#DA653B] hover:bg-orange-800 transition text-white px-8 py-3 rounded-xl font-medium">
 
             Download Receipt
 

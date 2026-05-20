@@ -1,167 +1,159 @@
-'use client';
+// src/app/(tourist)/microexperience/[id]/page.tsx
+import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
+import Image from 'next/image';
+import HostNavbar from '@/components/shared/navbar';
+import AvailabilityDisplay from '@/components/experiences/AvailabilityDisplay'; 
 
-import Link from "next/link";
-import { describe } from "node:test";
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
 
-export default function ExperiencesPage() {
+const calendarStyles = `
+  .rdp { --rdp-accent-color: #D2693E; --rdp-background-color: #F3D9CF; margin: 0; width: 100%; font-family: inherit; }
+  .rdp-months { justify-content: center; width: 100%; }
+  .rdp-month { width: 100%; }
+  .rdp-table { max-width: 100%; width: 100%; }
+  .rdp-caption { display: flex; align-items: center; justify-content: space-between; padding: 0 10px; margin-bottom: 20px; color: #4A3933; font-weight: bold; }
+  .rdp-nav { color: #1e3a8a; }
+  .rdp-cell { padding: 5px; text-align: center; }
+  .rdp-day { width: 40px; height: 40px; border-radius: 4px; transition: all 0.2s; color: #6b7280; }
+  .rdp-day_selected:not([disabled]) { background-color: var(--rdp-accent-color) !important; color: white !important; font-weight: bold; }
+  .rdp-button:hover:not([disabled]):not(.rdp-day_selected) { background-color: #F3D9CF !important; color: #D2693E; }
+`;
+
+export default async function MicroexperiencePage({ params }: PageProps) {
+  const { id } = await params;
+
+  const experience = await prisma.experience.findUnique({
+    where: { id },
+    include: {
+      host: { select: { fullName: true, role: true, profileImage: true } }
+    }
+  });
+
+  if (!experience) notFound();
+
+  const isTourist = true; 
+  const hostDisplayName = experience.host.fullName.split(' ').slice(0, 2).join(' ');
+
+  // Prioridad: 1. Imagen de DB, 2. Archivo local /avatar.png, 3. Gravatar fallback
+  const hostImage = experience.host.profileImage || "/avatar.png";
+
+  const rawImages = experience.images && experience.images.length > 0 
+    ? experience.images 
+    : ['https://via.placeholder.com/1200x800?text=Loqalli+Experience'];
+
+  const galleryImages = rawImages.length === 1 
+    ? [rawImages[0], rawImages[0], rawImages[0]] 
+    : rawImages.slice(0, 3);
+
   return (
-    <main className="min-h-screen bg-white text-slate-800 font-sans">
+    <div className="min-h-screen bg-white font-sans">
+      <style>{calendarStyles}</style>
+      <HostNavbar />
 
-      {/* NAVBAR */}
-      <nav className="w-full px-8 py-6 flex justify-between items-center border-b">
-        <h1 className="text-2xl font-serif italic text-[#D17842]">Loqalli</h1>
-
-        <div className="flex gap-6 text-sm font-semibold">
-          <Link href="/">Home</Link>
-          <Link href="/experiences" className="text-[#D17842]">Experiences</Link>
-          <Link href="/about">About</Link>
-        </div>
-
-        <div className="flex gap-3">
-          <button className="px-4 py-2 text-sm bg-[#D17842] text-white rounded-full">
-            Login
-          </button>
-          <button className="px-4 py-2 text-sm border rounded-full">
-            Sign Up
-          </button>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section className="text-center py-16 px-6 bg-gray-50">
-        <h2 className="text-4xl md:text-5xl font-serif font-medium mb-6">
-          Growing economies, connecting idetities
-        </h2>
-
-        <input
-          type="text"
-          placeholder="Search experiences..."
-          className="w-full max-w-xl mx-auto px-6 py-3 rounded-full border outline-none"
-        />
-      </section>
-
-      {/* FILTROS */}
-      <section className="flex justify-between items-center px-10 py-6">
-        <button className="border px-4 py-2 rounded-lg">Filter</button>
-
-        <p className="text-sm">
-          Sort by: <span className="font-bold">Featured</span>
-        </p>
-      </section>
-
-      {/* GRID */}
-      <section className="px-10 pb-20">
-        <div className="grid md:grid-cols-3 gap-10">
-
-          {[
-            {
-              title: "Traditional Indigo Workshop with Doña Maria",
-              price: "$45",
-              location: " Suchitoto, Cuscatlán",
-              img: "https://images.stockcake.com/public/d/3/7/d378e63d-eb24-4b4e-8697-ba64c98b6e14_large/indigo-dyeing-tradition-stockcake.jpg",
-            },
-            {
-              title: "Black Clay Secrets of Guatajiagua",
-              price: "$35",
-              location: "Guatajiagua, Morazán",
-              img: "https://tse1.explicit.bing.net/th/id/OIP.5iSdD_OVVTIQi7JwjJG6VgHaFX?rs=1&pid=ImgDetMain&o=7&rm=3",
-            },
-            {
-              title: "The Golden Bean: Cupping Session",
-              price: "$60",
-              location: "Apaneca, Ahuachapán",
-              img: "https://tse1.explicit.bing.net/th/id/OIP.PkpPaROERzW-q4b7GjcCXgHaE7?rs=1&pid=ImgDetMain&o=7&rm=3",
-            },
-            {
-              title: "Naif Art Painting Masterclass",
-              price: "$25",
-              location: "La Palma, Chalatenango",
-              img: "https://tse1.explicit.bing.net/th/id/OIP.5U-BGt_dm7EeHbKnacYnXQHaE4?rs=1&pid=ImgDetMain&o=7&rm=3",
-            },
-            {
-              title: "The Woodcarver's Touch",
-              price: "$50",
-              location: "Ilobasco, Cabañas",
-              img: "https://tse4.mm.bing.net/th/id/OIP.f2LAj34p8W0asVt_GTQVZQHaHE?rs=1&pid=ImgDetMain&o=7&rm=3",
-            },
-            {
-              title: "Coatepeque Morning Kayak & Local Fare",
-              price: "$75",
-              location: "Coatepeque, Santa Ana",
-              img: "https://media-cdn.tripadvisor.com/media/attractions-splice-spp-720x480/0b/f2/aa/0c.jpg",
-            },
-          ].map((item, idx) => (
-
-            <div key={idx} className="group">
-
-              <div className="relative h-[250px] rounded-xl overflow-hidden mb-4">
-                <img
-                  src={item.img}
-                  className="w-full h-full object-cover group-hover:scale-110 transition"
-                />
-                <span className="absolute top-3 left-3 bg-white px-3 py-1 text-sm rounded-full">
-                  {item.price}
-                </span>
-              </div>
-
-              <h3 className="text-xl font-semibold mb-1">
-                {item.title}
-              </h3>
-
-              <p className="text-sm text-gray-500 mb-3">
-                {item.location}
-              </p>
-
-              <button className="text-[#D17842] text-sm font-bold">
-                Explore Details →
-              </button>
-
+      <main className="max-w-7xl mx-auto px-6 py-10 text-[#4A3933]">
+        
+        {/* --- GALERÍA TRÍPTICO --- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8 h-[200px] md:h-[300px]">
+          {galleryImages.map((img, index) => (
+            <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner">
+              <Image 
+                src={img} 
+                alt={`${experience.title} ${index + 1}`}
+                fill
+                priority={index === 0}
+                quality={100}
+                sizes="(max-width: 768px) 100vw, 33vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+              />
             </div>
           ))}
-
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-100 px-10 py-12">
-        <div className="grid md:grid-cols-4 gap-10">
-
-          <div>
-            <h3 className="text-xl font-serif text-[#D17842]">Loqalli</h3>
-            <p className="text-sm text-gray-500 mt-2">
-              Crafting connections across El Salvador.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-3">HOST RESOURCES</h4>
-            <p>Host an Experience</p>
-            <p>Safety & Standards</p>
-            <p>Help Center</p>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-3">LEGAL</h4>
-            <p>Terms of Service</p>
-            <p>Privacy Policy</p>
-          </div>
-
-          <div>
-            <h4 className="font-bold mb-3">NEWSLETTER</h4>
-            <input
-              type="email"
-              placeholder="Email address"
-              className="border px-3 py-2 w-full"
-            />
-          </div>
-
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-10">
-          © 2026 Loqalli. All rights reserved.
-        </p>
-      </footer>
+        {/* --- TÍTULO Y UBICACIÓN --- */}
+        <section className="mb-12 border-b border-gray-100 pb-8">
+          <h1 className="text-4xl md:text-5xl font-bold mb-3 text-[#4A3933] tracking-tight">{experience.title}</h1>
+          <div className="flex items-center gap-2 text-gray-500 font-medium">
+            <span className="text-[#D2693E]">📍</span>
+            <span className="hover:text-[#D2693E] cursor-default transition-colors">{experience.address}</span>
+          </div>
+        </section>
 
-    </main>
+        <section className="grid grid-cols-1 md:grid-cols-12 gap-12">
+          {/* Columna Izquierda: Información */}
+          <div className="md:col-span-8 space-y-12">
+            
+            {/* Descripción */}
+            <div>
+              <h2 className="text-sm uppercase tracking-[0.3em] font-bold mb-6 text-[#D2693E]">About the experience</h2>
+              <p className="text-gray-600 leading-relaxed whitespace-pre-line text-lg font-light">
+                {experience.description}
+              </p>
+            </div>
+
+            {/* Host*/}
+            <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner">
+              <div className="relative w-32 h-32 shrink-0 overflow-hidden rounded-full shadow-inner bg-white">
+                <Image 
+                  src={hostImage} 
+                  alt={hostDisplayName}
+                  fill
+                  sizes="128px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-col justify-center text-center sm:text-left">
+                <p className="text-[10px] font-bold text-[#D2693E] uppercase tracking-widest mb-2">Meet your host</p>
+                <h3 className="text-3xl font-bold text-[#4A3933] mb-1">{hostDisplayName}</h3>
+                <p className="text-sm text-gray-500 italic">Experience Artisan</p>
+              </div>
+            </div>
+
+            {/* Disponibilidad */}
+            <div className="pt-4">
+              <h3 className="text-sm uppercase tracking-[0.3em] font-bold mb-6 text-[#D2693E]">Availability</h3>
+              <div className="border border-gray-100 p-8 flex justify-center bg-[#F3D9CF]/5 rounded-xl shadow-inner">
+                 <AvailabilityDisplay availableDates={experience.days} />
+              </div>
+            </div>
+          </div>
+
+          {/* Columna Derecha: Booking */}
+          <aside className="md:col-span-4 relative">
+            <div className="sticky top-24 border border-gray-100 p-8 space-y-8 bg-white shadow-sm rounded-2xl">
+              <div className="flex justify-between items-end">
+                <div>
+                  <span className="text-gray-400 text-[10px] block uppercase font-bold tracking-widest mb-1">Total per person</span>
+                  <span className="text-5xl font-bold text-[#4A3933]">${experience.pricePerPerson}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-6 border-y border-gray-100">
+                <div>
+                  <span className="text-gray-400 text-[9px] uppercase font-bold block">Capacity</span>
+                  <span className="text-[#4A3933] font-medium text-lg">{experience.maxParticipants} people</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 text-[9px] uppercase font-bold block">Payment</span>
+                  <span className="text-[#D2693E] text-base uppercase tracking-tighter">{experience.paymentMethod}</span>
+                </div>
+              </div>
+
+              {isTourist && (
+                <button className="w-full bg-[#D2693E] hover:opacity-90 text-white font-bold py-6 transition-all duration-300 uppercase tracking-widest text-sm shadow-md rounded-lg active:translate-y-1">
+                  Book this experience
+                </button>
+              )}
+
+              <p className="text-[10px] text-center text-gray-400 font-medium leading-tight">
+                Availability is limited to the dates shown in the calendar.
+              </p>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
   );
 }

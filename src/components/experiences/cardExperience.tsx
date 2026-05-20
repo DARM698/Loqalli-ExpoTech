@@ -45,7 +45,7 @@ export default function ExperienceCard({ id, title, description, price, category
 
         <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
           <Link 
-            href={`/experiences/${id}`}
+            href={`/microexperience/${id}`}
             className="bg-[#D2693E] text-white px-6 py-2 rounded text-sm font-bold hover:bg-[#b05832] transition-colors"
           >
             Explore Details

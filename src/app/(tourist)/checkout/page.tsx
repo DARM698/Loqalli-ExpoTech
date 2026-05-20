@@ -1,4 +1,31 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 export default function CheckoutPage() {
+  const [paymentMethod, setPaymentMethod] =
+useState("card");
+
+const router = useRouter();
+
+const subtotal = 28.50;
+
+const taxes = 1.50;
+
+const total = subtotal + taxes;
+
+const commission = total * 0.05;
+
+const hostReceives = total - commission;
+
+const handleReservation = () => {
+
+  if (paymentMethod === "cash") {
+
+    router.push("/cash-receipt");
+
+  }
+
+};
   return (
     <main className="min-h-screen bg-[#FFFFFF] px-10 py-10">
 
@@ -64,22 +91,45 @@ export default function CheckoutPage() {
         <div className="flex gap-4">
 
         {/* Card Option */}
-        <div className="border-2 rounded-xl border-[#DA653B] p-4 w-64 cursor-pointer">
+        <div className="grid md:grid-cols-3 gap-4">
 
-        <h3 className="font-medium text-[#2E2A27]">
-        Debit/Credit Card
-        </h3>
+  <button
+    onClick={() => setPaymentMethod("card")}
+    className={`border rounded-2xl p-5 text-left transition text-gray-700
+    ${
+      paymentMethod === "card"
+      ? "border-orange-500 bg-orange-50"
+      : "border-gray-700"
+    }`}
+  >
+    Debit/Credit Card
+  </button>
 
-        </div>
+  <button
+    onClick={() => setPaymentMethod("chivo")}
+    className={`border rounded-2xl p-5 text-left transition text-gray-700
+    ${
+      paymentMethod === "chivo"
+      ? "border-orange-500 bg-orange-50"
+      : "border-gray-700"
+    }`}
+  >
+    Chivo Wallet / Digital
+  </button>
 
-        {/* Chivo Wallet */}
-        <div className="border-2 rounded-xl border-[#DA653B] p-4 w-64 cursor-pointer">
+  <button
+    onClick={() => setPaymentMethod("cash")}
+    className={`border rounded-2xl p-5 text-left transition text-gray-700
+    ${
+      paymentMethod === "cash"
+      ? "border-orange-500 bg-orange-50"
+      : "border-gray-700"
+    }`}
+  >
+    Cash
+  </button>
 
-        <h3 className="font-medium text-[#2E2A27]">
-        Chivo Wallet / Digital
-        </h3>
-
-    </div>
+</div>
     
   </div>
 
@@ -222,54 +272,98 @@ export default function CheckoutPage() {
 </div>
 
         {/* Price Details */}
-        <div className="border-t border-b py-4 space-y-3 mb-6">
+<div className="space-y-4">
 
-        <div className="flex justify-between text-sm">
+  <div className="flex justify-between text-gray-500">
 
-        <span className="text-gray-500">
-        Subtotal (2 personas)
+    <span>
+      Subtotal (2 people)
+    </span>
+
+    <span>
+      ${subtotal}
+    </span>
+
+  </div>
+
+  {paymentMethod !== "cash" ? (
+
+    <>
+      <div className="flex justify-between text-gray-500">
+
+        <span>
+          Platform fee (5%)
         </span>
 
-        <span className="text-gray-400">
-        $70
+        <span>
+          ${taxes}
         </span>
 
-        </div>
+      </div>
 
-        <div className="flex justify-between text-sm">
+      <div className="flex justify-between font-bold text-2xl pt-4 text-gray-500">
 
-        <span className="text-gray-500">
-        Taxes
+        <span>Total</span>
+
+        <span>
+          ${total}
         </span>
 
-        <span className="text-gray-400">
-        $10
+      </div>
+
+    </>
+
+  ) : (
+
+    <>
+
+      <div className="flex justify-between text-gray-500">
+
+        <span>
+          Host receives
         </span>
 
-        </div>
-
-</div>
-
-      {/* Price */}
-      <div className="flex justify-between items-center mb-6">
-
-        <span className="text-gray-500">
-          Total
+        <span>
+          ${hostReceives.toFixed(2)}
         </span>
 
-        <span className="text-2xl font-bold text-[#2E2A27]">
-          $80
+      </div>
+
+      <div className="flex justify-between text-gray-500">
+
+        <span>
+          Platform fee (5%)
         </span>
+
+        <span>
+          ${commission.toFixed(2)}
+        </span>
+
+      </div>
+      <div className="flex justify-between font-bold text-2xl pt-4 text-gray-500">
+
+        <span>Total</span>
+
+        <span>
+          ${commission}
+        </span>
+
+      </div>
+
+    </>
+
+  )}
 
 </div>
 
       {/* Button */}
-      <button className="w-full bg-orange-500 hover:bg-orange-600 transition text-white py-3 rounded-xl font-medium">
+      <button
+      onClick={handleReservation}
+     className="w-full bg-orange-600 text-white py-4 rounded-xl hover:bg-orange-700 transition">
 
         Complete Reservation
 
       </button>
-
       {/* Host */}
       <div className="mt-6 border-t pt-4">
 

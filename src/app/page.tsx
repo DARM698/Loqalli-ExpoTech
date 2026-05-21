@@ -1,73 +1,66 @@
 'use client'; 
-import { useState, useEffect, useRef } from 'react';
-import { Search, Sparkles, Users, Palette, Heart, Send, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Search, Sparkles, Users, Palette, Send, ArrowRight } from 'lucide-react';
+// IMPORTANTE: Importamos Link para la navegación nativa
+import Link from 'next/link';
 
 export default function Home() {
   const [imgIndex, setImgIndex] = useState(0);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   
   const images = [
     "https://guanacos.com/wp-content/uploads/2022/10/GUANACOS-ALFARERIA-EN-ILOBASCO-1536x1024.jpg",
-    "https://i1.wp.com/revistaaventurero.com.mx/wp-content/uploads/2017/10/MU%C3%91ECOS-Amealco-Qro.-Turismo-facebook.jpg?fit=960%2C640&ssl=1",
     "https://perrocronico.com/wp-content/uploads/2021/10/foto3_juchitan.jpg",
     "https://elsalvadorviajar.com/wp-content/uploads/2022/05/Bailes-y-trajes-tipicos-de-El-Salvador.jpg",
     "https://i.ytimg.com/vi/3i6YXanz094/maxresdefault.jpg"
   ];
 
   useEffect(() => {
-    // 1. Manejo del Header
+    setMounted(true);
+
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     
-    // 2. Carrusel automático
     const timer = setInterval(() => {
       setImgIndex((prev) => (prev + 1) % images.length);
     }, 9000); 
 
-    // 3. EFECTO SCROLL (Intersection Observer)
-    const observerOptions = { threshold: 0.1 };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('reveal-visible');
-        }
-      });
-    }, observerOptions);
+    let observer: IntersectionObserver | null = null;
+    
+    const timeoutId = setTimeout(() => {
+      const observerOptions = { threshold: 0.1 };
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.remove('opacity-0', 'translate-y-[30px]');
+            entry.target.classList.add('opacity-100', 'translate-y-0');
+          }
+        });
+      }, observerOptions);
 
-    document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+      document.querySelectorAll('.reveal').forEach((el) => observer?.observe(el));
+    }, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       clearInterval(timer);
       window.removeEventListener('scroll', handleScroll);
+      if (observer) observer.disconnect();
     };
   }, [images.length]);
 
   return (
     <main className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#D17842] selection:text-white">
       
-  
-      <style jsx global>{`
-        .reveal {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: all 1s ease-out;
-        }
-        .reveal-visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      `}</style>
-
-      {/* 1. NAVEGACIÓN (Botones Idénticos) */}
+      {/* 1. NAVEGACIÓN */}
       <nav className={`fixed w-full z-50 transition-all duration-500 px-6 md:px-10 ${
-        isScrolled ? 'py-4 bg-white/90 backdrop-blur-md shadow-sm' : 'py-8 bg-transparent'
+        mounted && isScrolled ? 'py-4 bg-white/90 backdrop-blur-md shadow-sm' : 'py-8 bg-transparent'
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h1>
           
           <div className="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-            <a href="#" className="hover:text-[#D17842] transition-colors">Experiences</a>
-            <a href="#" className="hover:text-[#D17842] transition-colors">Hosts</a>
             <a href="#" className="hover:text-[#D17842] transition-colors">About us</a>
           </div>
 
@@ -75,15 +68,19 @@ export default function Home() {
             <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
               Login
             </button>
-            <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
+            {/* CAMBIO AQUÍ: Convertimos el botón en un componente Link que apunta a /register */}
+            <Link 
+              href="/register" 
+              className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
+            >
               Sign Up
-            </button>
+            </Link>
           </div>
         </div>
       </nav>
 
-      {/* 2. HERO SECTION (Aparece primero) */}
-      <section className="relative pt-40 pb-20 px-10 max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-center reveal">
+      {/* 2. HERO SECTION */}
+      <section className="relative pt-40 pb-20 px-10 max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-center reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="lg:col-span-5 space-y-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D17842]/10 text-[#D17842] font-bold text-[10px] tracking-[0.2em] uppercase">
             Authentic Micro-Experiences
@@ -117,8 +114,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. FEATURES (Aparecen al bajar) */}
-      <section className="max-w-7xl mx-auto px-10 py-32 border-t border-slate-50 reveal">
+      {/* 3. FEATURES */}
+      <section className="max-w-7xl mx-auto px-10 py-32 border-t border-slate-50 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="grid md:grid-cols-3 gap-16">
           {[
             { i: <Sparkles />, t: "Discover", d: "Uncover hidden workshops and unique crafts tucked away in the vibrant villages of El Salvador." },
@@ -137,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* 4. SECCIÓN DE CITA */}
-      <section className="grid md:grid-cols-2 bg-[#F5E6D3] min-h-[600px] reveal">
+      <section className="grid md:grid-cols-2 bg-[#F5E6D3] min-h-[600px] reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="relative overflow-hidden">
           <img 
             src="https://images.unsplash.com/photo-1621846323386-a60faf26f962?blend=000000&blend-alpha=10&blend-mode=normal&blend-w=1&crop=faces%2Cedges&h=630&mark=https:%2F%2Fimages.unsplash.com%2Fopengraph%2Flogo.png&mark-align=top%2Cleft&mark-pad=50&mark-w=64&w=1200&auto=format&fit=crop&q=60&ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzOTAzMDIwfA&ixlib=rb-4.0.3" 
@@ -146,7 +143,7 @@ export default function Home() {
           />
         </div>
         <div className="flex flex-col justify-center p-12 md:p-24 space-y-10">
-          <span className="text-8xl text-[#D17842] font-serif leading-none opacity-40">"</span>
+          <span className="text-8xl text-[#D17842] font-serif leading-none opacity-40">&ldquo;</span>
           <p className="text-3xl md:text-5xl font-serif italic text-slate-800 leading-tight">
             When we share our craft, we share the soul of our ancestors. These workshops are <span className="text-[#D17842]">bridges between worlds</span>.
           </p>
@@ -157,8 +154,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. EXPERIENCIAS (Atol Chuco y Tradiciones) */}
-      <section className="max-w-7xl mx-auto px-10 py-32 reveal">
+      {/* 5. EXPERIENCIAS */}
+      <section className="max-w-7xl mx-auto px-10 py-32 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
           <div className="space-y-4">
             <p className="text-[#D17842] tracking-[0.3em] font-bold text-[10px] uppercase">Curated Selections</p>
@@ -216,7 +213,7 @@ export default function Home() {
       </section>
 
       {/* 6. CTA SECTION */}
-      <section className="bg-[#D17842] py-32 text-center px-10 reveal">
+      <section className="bg-[#D17842] py-32 text-center px-10 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-4xl mx-auto space-y-10">
           <h2 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">Ready to see the unseen?</h2>
           <p className="text-white/80 text-xl max-w-2xl mx-auto leading-relaxed font-light">
@@ -231,7 +228,7 @@ export default function Home() {
       </section>
 
       {/* 7. FOOTER */}
-      <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal">
+      <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
           <div className="space-y-8">
             <h3 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h3>

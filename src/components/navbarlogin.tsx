@@ -24,6 +24,13 @@ export default function NavbarLogin() {
             </Link>
           </div>
 
+          {/* APARTADO CENTRAL: About Us (Se oculta en móviles para no romper el espacio) */}
+          <div className="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
+            <Link href="/aboutUs" className="hover:text-[#DA653B] transition-colors">
+              About us
+            </Link>
+          </div>
+
           {/* Botones de navegación con colores sólidos */}
           <div className="flex items-center gap-3">
             <Link 

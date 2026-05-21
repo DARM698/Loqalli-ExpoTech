@@ -2,8 +2,14 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import HostNavbar from '@/components/shared/navbar';
+import { cookies } from 'next/headers'; // Para leer la sesión/rol del usuario
+import { jwtVerify } from 'jose'; // Para desencriptar tu JWT
+import NavbarUser from '@/components/shared/navbar'; // Tu navbar unificado dinámico
 import AvailabilityDisplay from '@/components/experiences/AvailabilityDisplay'; 
+
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
+);
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -25,6 +31,24 @@ const calendarStyles = `
 export default async function MicroexperiencePage({ params }: PageProps) {
   const { id } = await params;
 
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+  
+  let currentRole: 'TOURIST' | 'HOST' = 'TOURIST';
+
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      if (payload.role === 'HOST' || payload.role === 'TOURIST') {
+        currentRole = payload.role as 'TOURIST' | 'HOST';
+      }
+    } catch (err) {
+      console.error("Error verificando token en Detalle de Experiencia:", err);
+    }
+  }
+
+  const isTourist = currentRole === 'TOURIST';
+
   const experience = await prisma.experience.findUnique({
     where: { id },
     include: {
@@ -34,10 +58,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
   if (!experience) notFound();
 
-  const isTourist = true; 
   const hostDisplayName = experience.host.fullName.split(' ').slice(0, 2).join(' ');
-
-  // Prioridad: 1. Imagen de DB, 2. Archivo local /avatar.png, 3. Gravatar fallback
   const hostImage = experience.host.profileImage || "/avatar.png";
 
   const rawImages = experience.images && experience.images.length > 0 
@@ -51,7 +72,8 @@ export default async function MicroexperiencePage({ params }: PageProps) {
   return (
     <div className="min-h-screen bg-white font-sans">
       <style>{calendarStyles}</style>
-      <HostNavbar />
+      
+      <NavbarUser role={currentRole} />
 
       <main className="max-w-7xl mx-auto px-6 py-10 text-[#4A3933]">
         
@@ -141,6 +163,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
                 </div>
               </div>
 
+              {/* El botón de reserva solo se muestra si el rol es estrictamente TOURIST */}
               {isTourist && (
                 <button className="w-full bg-[#D2693E] hover:opacity-90 text-white font-bold py-6 transition-all duration-300 uppercase tracking-widest text-sm shadow-md rounded-lg active:translate-y-1">
                   Book this experience

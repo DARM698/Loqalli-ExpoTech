@@ -35,13 +35,13 @@ model Experience {
   lng             Float?
   days            String[]
   slots           String[]
-  startTime       String?       // Formato sugerido: "09:00"
-  endTime         String?       // Formato sugerido: "18:00"
   images          String[]
   status          String        @default("DRAFT")
   createdAt       DateTime      @default(now())
   hostId          String
   paymentMethod   PaymentMethod @default(CASH)
+  endTime         String?
+  startTime       String?
   Booking         Booking[]
   host            User          @relation(fields: [hostId], references: [id])
 }

@@ -10,9 +10,6 @@ export default function AboutPage() {
   </h1>
 
   <div className="flex gap-6 text-sm font-semibold">
-    <a href="/" className="hover:text-[#D17842] transition">
-      Home
-    </a>
     <a href="/about" className="text-[#D17842]">
       About
     </a>

@@ -77,7 +77,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
       <main className="max-w-7xl mx-auto px-6 py-10 text-[#4A3933]">
         
-        {/* --- GALERÍA TRÍPTICO --- */}
+        {/* --- GALERÍA TRÍPTICO --- Mejora de diseño */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8 h-[200px] md:h-[300px]">
           {galleryImages.map((img, index) => (
             <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner">

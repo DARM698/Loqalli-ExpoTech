@@ -2,11 +2,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { createExperience } from '../../actions';
 import dynamic from 'next/dynamic';
-import HostNavbar from '@/components/shared/navbar';
 import { DayPicker } from 'react-day-picker';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import 'react-day-picker/dist/style.css';
+import NavbarUser from '@/components/shared/navbar';
 
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
   ssr: false,
@@ -58,21 +58,12 @@ export default function CreateExperiencePage() {
   const [address, setAddress] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
-
+  const [arrivalFiles, setArrivalFiles] = useState<File[]>([]);
+  const [arrivalPreviews, setArrivalPreviews] = useState<string[]>([]);
   useEffect(() => { 
     setMounted(true); 
   }, []);
 
-  const clearForm = () => {
-    formRef.current?.reset();
-    setCategory("Ceramics & Pottery");
-    setPaymentMethod("CASH");
-    setSelectedDates([]);
-    setImageFiles([]);
-    setPreviews([]);
-    setAddress("");
-    setLocation({ lat: 13.689, lng: -89.187 });
-  };
 
   const handleSearchLocation = async () => {
     if (!address || typeof window === 'undefined') return;
@@ -94,50 +85,87 @@ export default function CreateExperiencePage() {
     }
   };
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    try { 
-      formData.delete('images');
-      formData.append('category', category);
-      formData.append('startPeriod', startPeriod);
-      formData.append('endPeriod', endPeriod);
-      
-      // 🌟 Añadimos el método de pago seleccionado al envío
-      formData.append('paymentMethod', paymentMethod);
-      
-      const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
-      formData.append('selectedDays', JSON.stringify(formattedDates)); 
-      
-      formData.append('lat', location.lat.toString());
-      formData.append('lng', location.lng.toString());
-      
-      imageFiles.forEach((file) => {
-        formData.append('images', file);
-      });
+async function handleSubmit(e: React.FormEvent) {
+  e.preventDefault(); // Evita la recarga de la página
+  
+  // 1. Obtener datos del formulario actual
+  const formData = new FormData(formRef.current!);
+  const participants = parseInt(formData.get('participants') as string);
 
-      const result = await createExperience(formData);
-      if (result?.error) {
-        alert(result.error);
-        return;
-      }
-
-      clearForm();
-      router.push('/explore');
-    } 
-    catch (error) { 
-      console.error("Error fatal en el cliente:", error); 
-      alert("Error crítico al intentar guardar.");
-    } 
-    finally {
-      setLoading(false);
-    }
+  // 2. VALIDACIONES
+  if (selectedDates.length === 0) {
+    alert("Please select at least one date for your experience.");
+    return;
   }
+  if (!address) {
+    alert("Please provide a location for your experience.");
+    return;
+  }
+  if (participants > 8) {
+    alert("The maximum number of participants allowed is 8.");
+    return;
+  }
+  if (imageFiles.length === 0) {
+    alert("Please upload at least one main photo.");
+    return;
+  }
+
+  setLoading(true);
+
+  try { 
+    // Limpiamos y añadimos los campos de estado
+    formData.delete('images');
+    formData.append('category', category);
+    formData.append('startPeriod', startPeriod);
+    formData.append('endPeriod', endPeriod);
+    formData.append('paymentMethod', paymentMethod);
+    
+    const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
+    formData.append('selectedDays', JSON.stringify(formattedDates)); 
+    
+    formData.append('lat', location.lat.toString());
+    formData.append('lng', location.lng.toString());
+    
+    imageFiles.forEach((file) => {
+      formData.append('images', file);
+    });
+
+    arrivalFiles.forEach((file) => {
+      formData.append('arrivalImages', file);
+    });
+
+    const result = await createExperience(formData);
+    
+    if (result?.error) {
+      alert(result.error);
+      setLoading(false);
+      return; // El formulario NO se resetea y los datos persisten
+    }
+
+    // Éxito: Limpiamos y redirigimos
+    router.push('/explore');
+  } 
+  catch (error) { 
+    console.error("Error fatal en el cliente:", error); 
+    alert("Error crítico al intentar guardar.");
+    setLoading(false);
+  } 
+  // No llamamos a finally aquí para mantener loading activo si hay error
+}
+
+    const handleArrivalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        const newFiles = Array.from(e.target.files);
+        setArrivalFiles(prev => [...prev, ...newFiles]);
+        setArrivalPreviews(prev => [...prev, ...newFiles.map(file => URL.createObjectURL(file))]);
+      }
+    };
 
   const noArrowsClass = "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
   return (
     <div suppressHydrationWarning>
-      <HostNavbar />
+      <NavbarUser role="HOST" />
       
       {!mounted ? (
         <div className="min-h-screen bg-white p-8 animate-pulse flex items-center justify-center">
@@ -151,7 +179,7 @@ export default function CreateExperiencePage() {
             <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">List a Micro-experience</h1>
           </header>
 
-          <form ref={formRef} action={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
+          <form ref={formRef} onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
             
             {/* SECCIÓN BASIC INFO */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4 shadow-sm">
@@ -194,7 +222,7 @@ export default function CreateExperiencePage() {
               <textarea name="description" required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <input name="price" required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
-                <input name="participants" required type="number" placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
+                <input name="participants" required type="number" min={1} max={8} placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
               </div>
             </section>
 
@@ -285,7 +313,7 @@ export default function CreateExperiencePage() {
                   </div>
                 </div>
 
-                {/* 🌟 APARTADO DE MÉTODO DE PAGO (CASH O TRANSFERENCIA) */}
+                {/* APARTADO DE MÉTODO DE PAGO (CASH O TRANSFERENCIA) */}
                 <div className="mt-6 pt-4 border-t border-[#F3D9CF]/60 space-y-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Preferred Payment Method</label>
                   <div className="grid grid-cols-2 gap-3">
@@ -331,6 +359,19 @@ export default function CreateExperiencePage() {
                 </label>
                 {previews.map((src, i) => (
                   <img key={i} src={src} className="w-24 h-24 object-cover rounded-lg border border-[#F3D9CF]" alt="Preview" />
+                ))}
+              </div>
+            </section>
+
+            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+              <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 mb-4">Arrival Photos</h2>
+              <div className="flex flex-wrap gap-4">
+                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10 transition-colors">
+                  <span className="text-2xl text-[#D2693E]">+</span>
+                  <input type="file" multiple accept="image/*" onChange={handleArrivalFileChange} className="hidden" />
+                </label>
+                {arrivalPreviews.map((src, i) => (
+                  <img key={i} src={src} className="w-24 h-24 object-cover rounded-lg border border-[#F3D9CF]" alt="Arrival Preview" />
                 ))}
               </div>
             </section>

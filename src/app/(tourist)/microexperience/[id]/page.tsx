@@ -77,7 +77,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
       <main className="max-w-7xl mx-auto px-6 py-10 text-[#4A3933]">
         
-        {/* --- GALERÍA TRÍPTICO --- Mejora de diseño */}
+        {/* --- GALERÍA TRÍPTICO --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2 mb-8 h-[200px] md:h-[300px]">
           {galleryImages.map((img, index) => (
             <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner">
@@ -114,6 +114,31 @@ export default async function MicroexperiencePage({ params }: PageProps) {
                 {experience.description}
               </p>
             </div>
+
+            {/*Arrival Images*/}
+            {experience.arrivalImages && experience.arrivalImages.length > 0 && (
+              <div>
+                <h2 className="text-sm uppercase tracking-[0.3em] font-bold mb-6 text-[#D2693E]">Arrival Guide</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {experience.arrivalImages.map((img, index) => {
+                    console.log(`Debug Arrival Image #${index}:`, img);
+                    return (
+                      <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner h-48">
+                        <Image 
+                          src={img} 
+                          alt={`Arrival Guide ${index + 1}`}
+                          fill
+                          priority={index === 0}
+                          quality={100}
+                          sizes="(max-width: 768px) 100vw, 33vw"
+                          className="object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Host*/}
             <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner">
@@ -163,7 +188,6 @@ export default async function MicroexperiencePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {/* El botón de reserva solo se muestra si el rol es estrictamente TOURIST */}
               {isTourist && (
                 <button className="w-full bg-[#D2693E] hover:opacity-90 text-white font-bold py-6 transition-all duration-300 uppercase tracking-widest text-sm shadow-md rounded-lg active:translate-y-1">
                   Book this experience

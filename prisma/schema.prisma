@@ -17,6 +17,8 @@ model User {
   createdAt    DateTime      @default(now())
   profileImage String?
   bankInfo     BankInfo?
+  writtenReviews  Review[] @relation("WrittenReviews")
+  receivedReviews Review[] @relation("ReceivedReviews")
   Booking      Booking[]
   experiences  Experience[]
   transactions Transaction[]
@@ -36,6 +38,7 @@ model Experience {
   days            String[]
   slots           String[]
   images          String[]
+  arrivalImages   String[]
   status          String        @default("DRAFT")
   createdAt       DateTime      @default(now())
   hostId          String
@@ -44,6 +47,22 @@ model Experience {
   startTime       String?
   Booking         Booking[]
   host            User          @relation(fields: [hostId], references: [id])
+  reviews         Review[]
+}
+
+model Review {
+  id           String     @id @default(cuid())
+  rating       Int        
+  comment      String?    
+  createdAt    DateTime   @default(now())
+  authorId     String
+  author       User       @relation("WrittenReviews", fields: [authorId], references: [id])
+  experienceId String?
+  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  targetUserId String?
+  targetUser   User?      @relation("ReceivedReviews", fields: [targetUserId], references: [id])
+  @@index([experienceId])
+  @@index([targetUserId])
 }
 
 model BankInfo {
@@ -132,3 +151,4 @@ enum PayoutStatus {
   PENDING
   PAID
 }
+

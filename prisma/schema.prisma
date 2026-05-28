@@ -7,22 +7,22 @@ datasource db {
 }
 
 model User {
-  id           String        @id @default(cuid())
-  fullName     String
-  age          Int
-  email        String        @unique
-  password     String
-  bio          String?
-  role         Role
-  createdAt    DateTime      @default(now())
-  profileImage String?
-  bankInfo     BankInfo?
-  writtenReviews  Review[] @relation("WrittenReviews")
-  receivedReviews Review[] @relation("ReceivedReviews")
-  Booking      Booking[]
-  experiences  Experience[]
-  transactions Transaction[]
-  verification Verification?
+  id              String        @id @default(cuid())
+  fullName        String
+  age             Int
+  email           String        @unique
+  password        String
+  bio             String?
+  role            Role
+  createdAt       DateTime      @default(now())
+  profileImage    String?
+  bankInfo        BankInfo?
+  Booking         Booking[]
+  experiences     Experience[]
+  writtenReviews  Review[]      @relation("WrittenReviews")
+  receivedReviews Review[]      @relation("ReceivedReviews")
+  transactions    Transaction[]
+  verification    Verification?
 }
 
 model Experience {
@@ -38,29 +38,30 @@ model Experience {
   days            String[]
   slots           String[]
   images          String[]
-  arrivalImages   String[]
   status          String        @default("DRAFT")
   createdAt       DateTime      @default(now())
   hostId          String
   paymentMethod   PaymentMethod @default(CASH)
   endTime         String?
   startTime       String?
+  arrivalImages   String[]
   Booking         Booking[]
   host            User          @relation(fields: [hostId], references: [id])
   reviews         Review[]
 }
 
 model Review {
-  id           String     @id @default(cuid())
-  rating       Int        
-  comment      String?    
-  createdAt    DateTime   @default(now())
-  authorId     String
-  author       User       @relation("WrittenReviews", fields: [authorId], references: [id])
+  id           String      @id @default(cuid())
+  rating       Int
+  comment      String?
+  createdAt    DateTime    @default(now())
   experienceId String?
-  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  authorId     String
   targetUserId String?
-  targetUser   User?      @relation("ReceivedReviews", fields: [targetUserId], references: [id])
+  author       User        @relation("WrittenReviews", fields: [authorId], references: [id])
+  experience   Experience? @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  targetUser   User?       @relation("ReceivedReviews", fields: [targetUserId], references: [id])
+
   @@index([experienceId])
   @@index([targetUserId])
 }
@@ -152,3 +153,15 @@ enum PayoutStatus {
   PAID
 }
 
+
+model Comments {
+  id           String   @id @default(uuid())
+  rating       Int      
+  comment      String?  
+  createdAt    DateTime @default(now())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experienceId String
+  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
+  @@unique([userId, experienceId])
+}

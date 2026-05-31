@@ -154,14 +154,4 @@ enum PayoutStatus {
 }
 
 
-model Comments {
-  id           String   @id @default(uuid())
-  rating       Int      
-  comment      String?  
-  createdAt    DateTime @default(now())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  experienceId String
-  experience   Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
-  @@unique([userId, experienceId])
-}
+

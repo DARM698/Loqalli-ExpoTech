@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb', // Puedes ajustar este valor según lo necesites
+    },
+  },
   images: {
     // ESTO CORRIGE EL ERROR DE QUALITY 100
     qualities: [75, 100], 

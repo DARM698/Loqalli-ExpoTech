@@ -34,14 +34,14 @@ export default function NavbarLogin() {
           {/* Botones de navegación con colores sólidos */}
           <div className="flex items-center gap-3">
             <Link 
-              href={loginHref}
+              href={signUpHref}
               className="px-4 py-2 text-[10px] font-bold text-[#56423D] hover:text-[#DA653B] transition-colors uppercase tracking-widest"
             >
               Log in
             </Link>
 
             <Link 
-              href={signUpHref}
+              href={loginHref}
               className="px-5 py-2 text-[10px] font-bold text-white bg-[#DA653B] rounded-full hover:shadow-lg transition-all active:scale-95 uppercase tracking-widest"
             >
               Sign Up

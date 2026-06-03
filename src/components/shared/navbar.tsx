@@ -4,38 +4,42 @@ import { usePathname } from 'next/navigation';
 
 interface NavbarUserProps {
   role: 'TOURIST' | 'HOST';
+  userId: string; // Recibimos el ID como prop
 }
 
-export default function NavbarUser({ role }: NavbarUserProps) {
+export default function NavbarUser({ role, userId }: NavbarUserProps) {
+  console.log("--- DEBUG: Navbar props ---");
+  console.log("Role recibido:", role);
+  console.log("UserId recibido:", userId);
+
   const pathname = usePathname();
   const isTourist = role === 'TOURIST';
+  const profileHref = `/profile/${userId}`;
+  console.log("Link generado:", profileHref);
 
-  // Definición de enlaces dinámicos según el rol del usuario
   const navLinks = isTourist
     ? [
         { name: 'Explore', href: '/explore' },
         { name: 'About us', href: '/aboutUs' },
-        { name: 'Profile', href: '/profile' },
+        { name: 'Profile', href: profileHref },
       ]
     : [
         { name: 'Explore', href: '/explore' },
         { name: 'Create Experience', href: '/uploadMicroexperiences' },
         { name: 'Agenda / Calendar', href: '/host/agenda' },
-        { name: 'Profile', href: '/host/profile' },
+        { name: 'Profile', href: profileHref },
       ];
 
   return (
     <nav className="w-full bg-white border-b border-[#F3D9CF] px-6 py-4 flex items-center justify-between sticky top-0 z-[100]">
-      {/* Lado Izquierdo: Logo y Enlaces */}
+      {/* ... resto del código del nav igual ... */}
       <div className="flex items-center gap-12">
-        {/* Logo Loqalli */}
         <Link href={isTourist ? "/explore" : "/host"} className="text-2xl font-serif font-bold text-[#D2693E]">
           Loqalli
         </Link>
-
-        {/* Enlaces de Navegación */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => {
+            // Ajuste: verificamos si incluye el href para marcarlo como activo
             const isActive = pathname === link.href;
             return (
               <Link
@@ -51,7 +55,6 @@ export default function NavbarUser({ role }: NavbarUserProps) {
           })}
         </div>
       </div>
-
     </nav>
   );
 }

@@ -65,10 +65,12 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
-              Login
-            </button>
-            {/* CAMBIO AQUÍ: Convertimos el botón en un componente Link que apunta a /register */}
+            <Link 
+              href="/register" 
+              className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
+            >
+              Log in
+            </Link>
             <Link 
               href="/register" 
               className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"

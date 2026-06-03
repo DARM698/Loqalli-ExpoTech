@@ -11,34 +11,40 @@ const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
 );
 
-// Función auxiliar para mantener el código limpio y reutilizable
-async function uploadFiles(files: File[], bucket: string) {
-  const urls: string[] = [];
-  for (const file of files) {
-    if (!file || file.size === 0) continue;
+/**
+ * Función para estandarizar el formato de hora a HH:MM AM/PM
+ */
+function formatTime(hour: string, min: string, period: string) {
+  const h = hour.toString().padStart(2, '0');
+  const m = min.toString().padStart(2, '0');
+  return `${h}:${m} ${period}`;
+}
 
-    const fileExtension = file.name.split('.').pop();
+async function uploadFiles(files: File[], bucket: string) {
+  if (!files || files.length === 0) return [];
+
+  const uploadPromises = files.map(async (file) => {
+    if (!file || file.size === 0) return null;
+
     const cleanFileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
     
     const { error: uploadError } = await supabase.storage
-      .from(bucket) 
+      .from(bucket)
       .upload(cleanFileName, file, {
-        contentType: 'image/jpg',
+        contentType: file.type || 'image/jpeg',
         upsert: false
       });
 
     if (uploadError) {
-      console.error(`Error subiendo a Supabase (${bucket}):`, uploadError.message);
-      throw new Error(`Error al subir imagen: ${uploadError.message}`);
+      throw new Error(`Error subiendo a ${bucket}: ${uploadError.message}`);
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from(bucket)
-      .getPublicUrl(cleanFileName);
+    const { data } = supabase.storage.from(bucket).getPublicUrl(cleanFileName);
+    return data.publicUrl;
+  });
 
-    urls.push(publicUrl);
-  }
-  return urls;
+  const results = await Promise.all(uploadPromises);
+  return results.filter((url): url is string => url !== null);
 }
 
 export async function createExperience(formData: FormData) {
@@ -64,18 +70,26 @@ export async function createExperience(formData: FormData) {
       throw new Error("No tienes permisos para crear experiencias.");
     }
 
-    // Procesar imágenes normales
     const imageFiles = formData.getAll('images') as File[];
     const imageUrls = await uploadFiles(imageFiles, 'experiences');
 
-    // Procesar imágenes de llegada
     const arrivalFiles = formData.getAll('arrivalImages') as File[];
     const arrivalImageUrls = await uploadFiles(arrivalFiles, 'arrival-guides');
 
     const rawPaymentMethod = formData.get('paymentMethod') as string;
-    const paymentMethod: PaymentMethod = rawPaymentMethod === 'TRANSFER' 
-      ? PaymentMethod.TRANSFER 
-      : PaymentMethod.CASH;
+    const paymentMethod: PaymentMethod = rawPaymentMethod === 'TRANSFER' ? PaymentMethod.TRANSFER : PaymentMethod.CASH;
+
+    // Aplicando formateo de hora consistente
+    const startTime = formatTime(
+      formData.get('startHour') as string || "09",
+      formData.get('startMin') as string || "00",
+      formData.get('startPeriod') as string || "AM"
+    );
+    const endTime = formatTime(
+      formData.get('endHour') as string || "12",
+      formData.get('endMin') as string || "00",
+      formData.get('endPeriod') as string || "PM"
+    );
 
     await prisma.experience.create({
       data: {
@@ -88,9 +102,11 @@ export async function createExperience(formData: FormData) {
         lat: parseFloat(formData.get('lat') as string || "0"),
         lng: parseFloat(formData.get('lng') as string || "0"),
         days: JSON.parse(formData.get('selectedDays') as string || "[]"),
-        slots: [`${formData.get('startHour')}:${formData.get('startMin')} ${formData.get('startPeriod')} - ${formData.get('endHour')}:${formData.get('endMin')} ${formData.get('endPeriod')}`], 
+        slots: [`${startTime} - ${endTime}`],
+        startTime: startTime,
+        endTime: endTime,
         images: imageUrls, 
-        arrivalImages: arrivalImageUrls, // Nuevo campo añadido
+        arrivalImages: arrivalImageUrls,
         status: 'PUBLISHED',
         paymentMethod: paymentMethod,
         host: {
@@ -106,4 +122,178 @@ export async function createExperience(formData: FormData) {
     console.error("Error detallado en createExperience:", error);
     return { error: error.message || "Error al guardar la experiencia." };
   }
+}
+
+export async function updateExperience(formData: FormData) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session_token')?.value;
+
+    if (!token) throw new Error("No estás autenticado.");
+
+    await jwtVerify(token, JWT_SECRET);
+    const experienceId = formData.get('id') as string;
+
+    const keptImages = JSON.parse(formData.get('existingImages') as string || "[]");
+    const keptArrivalImages = JSON.parse(formData.get('existingArrivalImages') as string || "[]");
+
+    const newImageUrls = await uploadFiles(formData.getAll('images') as File[], 'experiences');
+    const newArrivalImageUrls = await uploadFiles(formData.getAll('arrivalImages') as File[], 'arrival-guides');
+
+    const finalImages = [...keptImages, ...newImageUrls];
+    const finalArrivalImages = [...keptArrivalImages, ...newArrivalImageUrls];
+
+    const rawPaymentMethod = formData.get('paymentMethod') as string;
+    const paymentMethod: PaymentMethod = rawPaymentMethod === 'TRANSFER' ? PaymentMethod.TRANSFER : PaymentMethod.CASH;
+
+    // Aplicando formateo de hora consistente
+    const startTime = formatTime(
+      formData.get('startHour') as string || "09",
+      formData.get('startMin') as string || "00",
+      formData.get('startPeriod') as string || "AM"
+    );
+    const endTime = formatTime(
+      formData.get('endHour') as string || "12",
+      formData.get('endMin') as string || "00",
+      formData.get('endPeriod') as string || "PM"
+    );
+
+    await prisma.experience.update({
+      where: { id: experienceId },
+      data: {
+        title: formData.get('title') as string,
+        category: formData.get('category') as string,
+        description: formData.get('description') as string,
+        pricePerPerson: parseFloat(formData.get('price') as string || "0"),
+        maxParticipants: parseInt(formData.get('participants') as string || "1"),
+        address: formData.get('address') as string,
+        lat: parseFloat(formData.get('lat') as string || "0"),
+        lng: parseFloat(formData.get('lng') as string || "0"),
+        days: JSON.parse(formData.get('selectedDays') as string || "[]"),
+        slots: [`${startTime} - ${endTime}`],
+        startTime: startTime,
+        endTime: endTime,
+        paymentMethod: paymentMethod,
+        images: finalImages,
+        arrivalImages: finalArrivalImages,
+      },
+    });
+
+    revalidatePath(`/explore`);
+    return { success: true }; 
+
+  } catch (error: any) {
+    console.error("Error en updateExperience:", error);
+    return { error: error.message || "Error al actualizar la experiencia." };
+  }
+}
+
+export async function deleteExperience(experienceId: string) {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('session_token')?.value;
+    if (!token) throw new Error("No autenticado");
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const userId = payload.id as string;
+
+    const experience = await prisma.experience.findUnique({
+      where: { id: experienceId },
+      select: { hostId: true }
+    });
+
+    if (experience?.hostId !== userId) {
+      throw new Error("No tienes permiso para borrar esta experiencia");
+    }
+
+    await prisma.experience.delete({ where: { id: experienceId } });
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    return { error: error.message };
+  }
+}
+
+export async function updateProfileImage(userId: string, imageUrl: string) {
+  try {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: imageUrl }
+    });
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error("Error al actualizar la imagen de perfil:", error);
+    return { error: "No se pudo actualizar la imagen de perfil" };
+  }
+}
+
+export async function uploadProfileImageDirectly(userId: string, formData: FormData) {
+  try {
+    const file = formData.get('file') as File;
+    if (!file) throw new Error("No se recibió ningún archivo.");
+
+    const fileName = `${userId}/${Date.now()}-avatar.jpg`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('profile-images')
+      .upload(fileName, file, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+    if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`);
+
+    const { data } = supabase.storage
+      .from('profile-images')
+      .getPublicUrl(fileName);
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: data.publicUrl }
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true, url: data.publicUrl };
+  } catch (error: any) {
+    console.error("Error en uploadProfileImageDirectly:", error);
+    return { error: error.message };
+  }
+}
+
+export async function createBooking(data: {
+  experienceId: string;
+  touristId: string;
+  date: string;
+  time: string;
+  guests: number;
+}) {
+  return await prisma.$transaction(async (tx) => {
+    const experience = await tx.experience.findUnique({
+      where: { id: data.experienceId },
+      select: { maxParticipants: true },
+    });
+    const currentBookings = await tx.booking.aggregate({
+      where: {
+        experienceId: data.experienceId,
+        date: data.date,
+        time: data.time,
+        status: { not: "CANCELLED" },
+      },
+      _sum: { guests: true },
+    });
+
+    const totalReserved = currentBookings._sum.guests || 0;
+
+    if (totalReserved + data.guests > (experience?.maxParticipants || 0)) {
+      throw new Error("No hay suficientes cupos disponibles para esta fecha.");
+    }
+
+    return await tx.booking.create({
+      data: {
+        ...data,
+        status: "CONFIRMED", 
+      },
+    });
+  });
 }

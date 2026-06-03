@@ -10,31 +10,39 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('session_token')?.value;
   const { pathname } = request.nextUrl;
 
-  // Si intentan entrar a subir experiencias
-  if (pathname.startsWith('/uploadMicroexperiences')) {
-    if (!token) {
-      // Redirigir al login si no tiene cookie
+  // 1. Si no hay token, redirigir a login (excepto si ya están en el login)
+  if (!token) {
+    // Si intenta acceder a rutas protegidas y no está logueado, manda al login
+    if (pathname.startsWith('/uploadMicroexperiences') || 
+        pathname.startsWith('/dashboard') || 
+        pathname.startsWith('/bookings') || 
+        pathname.startsWith('/profile')) {
       return NextResponse.redirect(new URL('/Login/login-host', request.url));
     }
-
-    try {
-      // Verificar validez del Token
-      const { payload } = await jwtVerify(token, JWT_SECRET);
-      
-      // Control de roles estricto: Si no eres HOST, fuera.
-      if (payload.role !== 'HOST') {
-        return NextResponse.redirect(new URL('/Login/login-tourist', request.url));
-      }
-    } catch (err) {
-      // Token alterado o expirado
-      return NextResponse.redirect(new URL('/Login/login-host', request.url));
-    }
+    return NextResponse.next();
   }
 
-  return NextResponse.next();
+  // 2. Si hay token, verificarlo
+  try {
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+
+    // Protección específica de rol para subir experiencias
+    if (pathname.startsWith('/uploadMicroexperiences') && payload.role !== 'HOST') {
+      return NextResponse.redirect(new URL('/Login/login-tourist', request.url));
+    }
+
+    return NextResponse.next();
+  } catch (err) {
+    // Si el token es inválido, limpiar y redirigir
+    return NextResponse.redirect(new URL('/Login/login-host', request.url));
+  }
 }
 
-// Configurar sobre qué rutas se ejecutará el middleware
 export const config = {
-  matcher: ['/uploadMicroexperiences/:path*'],
+  matcher: [
+    '/uploadMicroexperiences/:path*',
+    '/dashboard/:path*',
+    '/bookings/:path*',
+    '/profile/:path*'
+  ],
 };

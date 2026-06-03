@@ -22,7 +22,7 @@ export default function RegisterWelcomePage() {
 
         {/* Subtítulo */}
         <p className="text-sm md:text-base text-slate-500 leading-relaxed max-w-sm">
-          How would you like to sign up, as a tourist or a host?
+          How would you like to sign up or log in, as a tourist or a host?
         </p>
 
         {/* Botones de Selección Estilizados */}

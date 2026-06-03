@@ -1,11 +1,12 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { createExperience } from '../../actions';
+import { createExperience, updateExperience } from '@/app/actions';
 import dynamic from 'next/dynamic';
 import { DayPicker } from 'react-day-picker';
-import { format } from 'date-fns';
+import { format, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import 'react-day-picker/dist/style.css';
+import { X } from 'lucide-react';
 import NavbarUser from '@/components/shared/navbar';
 
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
@@ -37,33 +38,37 @@ const calendarStyles = `
   }
 `;
 
-export default function CreateExperiencePage() {
+export default function CreateExperienceForm({ initialData }: { initialData?: any }) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  const [category, setCategory] = useState("Ceramics & Pottery");
+  const [category, setCategory] = useState(initialData?.category || "Ceramics & Pottery");
   const [isCatOpen, setIsCatOpen] = useState(false);
-  const [startPeriod, setStartPeriod] = useState("AM");
+  const [startPeriod, setStartPeriod] = useState(initialData?.startPeriod || "AM");
   const [isStartOpen, setIsStartOpen] = useState(false);
-  const [endPeriod, setEndPeriod] = useState("PM");
+  const [endPeriod, setEndPeriod] = useState(initialData?.endPeriod || "PM");
   const [isEndOpen, setIsEndOpen] = useState(false);
 
-  // 🌟 Estado para el método de pago que empata con tu Enum en Prisma
-  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH");
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">(initialData?.paymentMethod || "CASH");
 
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
-  const [location, setLocation] = useState({ lat: 13.689, lng: -89.187 });
-  const [address, setAddress] = useState("");
+  const [selectedDates, setSelectedDates] = useState<Date[]>(
+    initialData?.selectedDays ? initialData.selectedDays.map((d: string) => parseISO(d)) : []
+  );
+  const [location, setLocation] = useState({ 
+    lat: initialData?.lat || 13.689, 
+    lng: initialData?.lng || -89.187 
+  });
+  const [address, setAddress] = useState(initialData?.address || "");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [previews, setPreviews] = useState<string[]>(initialData?.images || []);
   const [arrivalFiles, setArrivalFiles] = useState<File[]>([]);
-  const [arrivalPreviews, setArrivalPreviews] = useState<string[]>([]);
+  const [arrivalPreviews, setArrivalPreviews] = useState<string[]>(initialData?.arrivalImages || []);
+  
   useEffect(() => { 
     setMounted(true); 
   }, []);
-
 
   const handleSearchLocation = async () => {
     if (!address || typeof window === 'undefined') return;
@@ -85,109 +90,124 @@ export default function CreateExperiencePage() {
     }
   };
 
-async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault(); // Evita la recarga de la página
-  
-  // 1. Obtener datos del formulario actual
-  const formData = new FormData(formRef.current!);
-  const participants = parseInt(formData.get('participants') as string);
-
-  // 2. VALIDACIONES
-  if (selectedDates.length === 0) {
-    alert("Please select at least one date for your experience.");
-    return;
-  }
-  if (!address) {
-    alert("Please provide a location for your experience.");
-    return;
-  }
-  if (participants > 8) {
-    alert("The maximum number of participants allowed is 8.");
-    return;
-  }
-  if (imageFiles.length === 0) {
-    alert("Please upload at least one main photo.");
-    return;
-  }
-
-  setLoading(true);
-
-  try { 
-    // Limpiamos y añadimos los campos de estado
-    formData.delete('images');
-    formData.append('category', category);
-    formData.append('startPeriod', startPeriod);
-    formData.append('endPeriod', endPeriod);
-    formData.append('paymentMethod', paymentMethod);
-    
-    const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
-    formData.append('selectedDays', JSON.stringify(formattedDates)); 
-    
-    formData.append('lat', location.lat.toString());
-    formData.append('lng', location.lng.toString());
-    
-    imageFiles.forEach((file) => {
-      formData.append('images', file);
-    });
-
-    arrivalFiles.forEach((file) => {
-      formData.append('arrivalImages', file);
-    });
-
-    const result = await createExperience(formData);
-    
-    if (result?.error) {
-      alert(result.error);
-      setLoading(false);
-      return; // El formulario NO se resetea y los datos persisten
+  const removeImage = (indexToRemove: number) => {
+    const isBlob = previews[indexToRemove].startsWith('blob:');
+    if (isBlob) {
+      const blobUrls = previews.filter(p => p.startsWith('blob:'));
+      const indexInBlobs = blobUrls.indexOf(previews[indexToRemove]);
+      setImageFiles(prev => prev.filter((_, i) => i !== indexInBlobs));
     }
+    setPreviews(prev => prev.filter((_, i) => i !== indexToRemove));
+  };
 
-    // Éxito: Limpiamos y redirigimos
-    router.push('/explore');
-  } 
-  catch (error) { 
-    console.error("Error fatal en el cliente:", error); 
-    alert("Error crítico al intentar guardar.");
-    setLoading(false);
-  } 
-  // No llamamos a finally aquí para mantener loading activo si hay error
-}
+  const removeArrivalImage = (indexToRemove: number) => {
+    const isBlob = arrivalPreviews[indexToRemove].startsWith('blob:');
+    if (isBlob) {
+      const blobUrls = arrivalPreviews.filter(p => p.startsWith('blob:'));
+      const indexInBlobs = blobUrls.indexOf(arrivalPreviews[indexToRemove]);
+      setArrivalFiles(prev => prev.filter((_, i) => i !== indexInBlobs));
+    }
+    setArrivalPreviews(prev => prev.filter((_, i) => i !== indexToRemove));
+  };
 
-    const handleArrivalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files) {
-        const newFiles = Array.from(e.target.files);
-        setArrivalFiles(prev => [...prev, ...newFiles]);
-        setArrivalPreviews(prev => [...prev, ...newFiles.map(file => URL.createObjectURL(file))]);
-      }
-    };
+  const handleArrivalFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files);
+      setArrivalFiles(prev => [...prev, ...newFiles]);
+      setArrivalPreviews(prev => [...prev, ...newFiles.map(file => URL.createObjectURL(file))]);
+    }
+  };
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!formRef.current) return;
+    const formData = new FormData(formRef.current);
+
+    if (initialData?.id) formData.set('id', initialData.id);
+
+    const participants = parseInt(formData.get('participants') as string);
+    if (selectedDates.length === 0) { alert("Please select at least one date."); return; }
+    if (!address) { alert("Please provide a location."); return; }
+    if (participants > 8) { alert("Max 8 participants."); return; }
+    if (previews.length === 0) { alert("Please upload at least one main photo."); return; }
+
+    setLoading(true);
+
+    try { 
+      formData.delete('images');
+      formData.delete('arrivalImages');
+
+      const existingImages = previews.filter(url => !url.startsWith('blob:'));
+      const existingArrivalImages = arrivalPreviews.filter(url => !url.startsWith('blob:'));
+
+      formData.append('existingImages', JSON.stringify(existingImages));
+      formData.append('existingArrivalImages', JSON.stringify(existingArrivalImages));
+
+      formData.set('category', category);
+      formData.set('startPeriod', startPeriod);
+      formData.set('endPeriod', endPeriod);
+      formData.set('paymentMethod', paymentMethod);
+      
+      const sH = (formData.get('startHour') as string).padStart(2, '0');
+      const sM = (formData.get('startMin') as string).padStart(2, '0');
+      const eH = (formData.get('endHour') as string).padStart(2, '0');
+      const eM = (formData.get('endMin') as string).padStart(2, '0');
+      
+      formData.set('startTime', `${sH}:${sM} ${startPeriod}`);
+      formData.set('endTime', `${eH}:${eM} ${endPeriod}`);
+      
+      const formattedDates = selectedDates.map(date => format(date, 'yyyy-MM-dd'));
+      formData.set('selectedDays', JSON.stringify(formattedDates)); 
+      
+      formData.set('lat', location.lat.toString());
+      formData.set('lng', location.lng.toString());
+      
+      imageFiles.forEach((file) => formData.append('images', file));
+      arrivalFiles.forEach((file) => formData.append('arrivalImages', file));
+
+      const result = initialData?.id 
+        ? await updateExperience(formData) 
+        : await createExperience(formData);
+      
+      if (result?.error) { alert(result.error); setLoading(false); return; }
+
+      router.push('/explore');
+    } 
+    catch (error) { 
+      console.error("Error:", error); 
+      alert("Error saving data.");
+      setLoading(false);
+    } 
+  }
 
   const noArrowsClass = "[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
   return (
     <div suppressHydrationWarning>
-      <NavbarUser role="HOST" />
+      <NavbarUser role="HOST" userId="host" />
       
       {!mounted ? (
         <div className="min-h-screen bg-white p-8 animate-pulse flex items-center justify-center">
-             <div className="text-[#D2693E] font-serif text-xl">Loading experience creator...</div>
+             <div className="text-[#D2693E] font-serif text-xl">Loading...</div>
         </div>
       ) : (
         <div className="min-h-screen bg-white p-4 md:p-8 md:pt-12 font-sans text-[#4A3933]">
           <style>{calendarStyles}</style>
           
           <header className="max-w-5xl mx-auto text-center mb-10">
-            <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">List a Micro-experience</h1>
+            <h1 className="text-3xl md:text-5xl font-serif text-[#D2693E] mb-4">
+              {initialData ? "Edit Micro-experience" : "List a Micro-experience"}
+            </h1>
           </header>
 
           <form ref={formRef} onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
             
-            {/* SECCIÓN BASIC INFO */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Basic Info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-500">Experience Title</label>
-                  <input name="title" required type="text" placeholder="e.g. Traditional Indigo" className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none focus:ring-2 focus:ring-[#D2693E]" />
+                  <input name="title" defaultValue={initialData?.title} required type="text" placeholder="e.g. Traditional Indigo" className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none focus:ring-2 focus:ring-[#D2693E]" />
                 </div>
 
                 <div className="space-y-2 relative">
@@ -216,17 +236,15 @@ async function handleSubmit(e: React.FormEvent) {
               </div>
             </section>
 
-            {/* SECCIÓN DETAILS */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
-              <textarea name="description" required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
+              <textarea name="description" defaultValue={initialData?.description} required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input name="price" required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
-                <input name="participants" required type="number" min={1} max={8} placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
+                <input name="price" defaultValue={initialData?.price} required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
+                <input name="participants" defaultValue={initialData?.participants} required type="number" min={1} max={8} placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
               </div>
             </section>
 
-            {/* SECCIÓN LOCATION */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Location</h2>
               <div className="space-y-4 pt-4">
@@ -248,7 +266,6 @@ async function handleSubmit(e: React.FormEvent) {
             </section>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* SECCIÓN AVAILABILITY */}
               <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col items-center">
                 <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 w-full mb-4">Availability</h2>
                 <div className="bg-[#F3D9CF]/10 rounded-lg p-2 border border-[#F3D9CF]/50">
@@ -260,14 +277,8 @@ async function handleSubmit(e: React.FormEvent) {
                     className="border-none"
                   />
                 </div>
-                <p className="text-xs text-gray-500 mt-4 self-start">
-                  {selectedDates.length > 0 
-                    ? `${selectedDates.length} dates selected` 
-                    : "Click on the dates you'll be hosting."}
-                </p>
               </section>
 
-              {/* SECCIÓN SCHEDULE & PAYMENT METHOD */}
               <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col justify-between">
                 <div>
                   <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule & Payout</h2>
@@ -278,14 +289,9 @@ async function handleSubmit(e: React.FormEvent) {
                       <div key={i} className="flex items-center gap-4">
                         <span className="text-xs font-bold text-gray-400 w-12 uppercase">{time.label}</span>
                         <div className="flex bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg overflow-visible flex-1">
-                          
-                          {/* Input Hora Separado */}
-                          <input name={time.hName} type="number" min={1} max={12} defaultValue={time.label === 'From' ? 9 : 12} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
+                          <input name={time.hName} type="number" min={1} max={12} defaultValue={initialData?.[time.hName] || (time.label === 'From' ? 9 : 12)} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
                           <span className="flex items-center text-[#D2693E] font-bold">:</span>
-                          
-                          {/* Input Minutos Separado */}
-                          <input name={time.mName} type="number" min={0} max={59} defaultValue={0} placeholder="00" className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
-                          
+                          <input name={time.mName} type="number" min={0} max={59} defaultValue={initialData?.[time.mName] || 0} placeholder="00" className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
                           <div className="relative">
                             <div 
                               onClick={() => time.setOpen(!time.open)}
@@ -296,11 +302,7 @@ async function handleSubmit(e: React.FormEvent) {
                             {time.open && (
                               <div className="absolute right-0 top-full mt-1 bg-white border border-[#F3D9CF] rounded shadow-xl z-[60] overflow-hidden">
                                 {["AM", "PM"].map(p => (
-                                  <div 
-                                    key={p} 
-                                    onClick={() => { time.setState(p); time.setOpen(false); }}
-                                    className="px-4 py-2 text-[#4A3933] hover:bg-[#F3D9CF] cursor-pointer"
-                                  >
+                                  <div key={p} onClick={() => { time.setState(p); time.setOpen(false); }} className="px-4 py-2 text-[#4A3933] hover:bg-[#F3D9CF] cursor-pointer">
                                     {p}
                                   </div>
                                 ))}
@@ -313,52 +315,34 @@ async function handleSubmit(e: React.FormEvent) {
                   </div>
                 </div>
 
-                {/* APARTADO DE MÉTODO DE PAGO (CASH O TRANSFERENCIA) */}
                 <div className="mt-6 pt-4 border-t border-[#F3D9CF]/60 space-y-2">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-wider block">Preferred Payment Method</label>
                   <div className="grid grid-cols-2 gap-3">
-                    
-                    {/* Opción Cash */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("CASH")}
-                      className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center gap-2 outline-none
-                        ${paymentMethod === "CASH" 
-                          ? "bg-[#D2693E] text-white border-[#D2693E] shadow-sm ring-2 ring-[#D2693E]/20" 
-                          : "bg-[#F3D9CF]/10 text-[#4A3933] border-[#F3D9CF] hover:bg-[#F3D9CF]/30"
-                        }`}
-                    >
-                      <span className="text-base"></span> Cash
-                    </button>
-
-                    {/* Opción Transferencia */}
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("TRANSFER")}
-                      className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center gap-2 outline-none
-                        ${paymentMethod === "TRANSFER" 
-                          ? "bg-[#D2693E] text-white border-[#D2693E] shadow-sm ring-2 ring-[#D2693E]/20" 
-                          : "bg-[#F3D9CF]/10 text-[#4A3933] border-[#F3D9CF] hover:bg-[#F3D9CF]/30"
-                        }`}
-                    >
-                      <span className="text-base"></span> Bank Transfer
-                    </button>
-
+                    <button type="button" onClick={() => setPaymentMethod("CASH")} className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center ${paymentMethod === "CASH" ? "bg-[#D2693E] text-white border-[#D2693E]" : "bg-[#F3D9CF]/10 border-[#F3D9CF]"}`}>Cash</button>
+                    <button type="button" onClick={() => setPaymentMethod("TRANSFER")} className={`p-3 rounded-lg border font-medium text-sm transition-all flex items-center justify-center ${paymentMethod === "TRANSFER" ? "bg-[#D2693E] text-white border-[#D2693E]" : "bg-[#F3D9CF]/10 border-[#F3D9CF]"}`}>Bank Transfer</button>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* SECCIÓN PHOTOS */}
             <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Photos</h2>
               <div className="flex flex-wrap gap-4 mt-4">
-                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10 transition-colors">
+                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
                   <span className="text-2xl text-[#D2693E]">+</span>
                   <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                 </label>
                 {previews.map((src, i) => (
-                  <img key={i} src={src} className="w-24 h-24 object-cover rounded-lg border border-[#F3D9CF]" alt="Preview" />
+                  <div key={i} className="relative w-24 h-24">
+                    <img src={src} className="w-full h-full object-cover rounded-lg border border-[#F3D9CF]" alt="Preview" />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(i)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </section>
@@ -366,32 +350,29 @@ async function handleSubmit(e: React.FormEvent) {
             <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 mb-4">Arrival Photos</h2>
               <div className="flex flex-wrap gap-4">
-                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10 transition-colors">
+                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
                   <span className="text-2xl text-[#D2693E]">+</span>
                   <input type="file" multiple accept="image/*" onChange={handleArrivalFileChange} className="hidden" />
                 </label>
                 {arrivalPreviews.map((src, i) => (
-                  <img key={i} src={src} className="w-24 h-24 object-cover rounded-lg border border-[#F3D9CF]" alt="Arrival Preview" />
+                  <div key={i} className="relative w-24 h-24">
+                    <img src={src} className="w-full h-full object-cover rounded-lg border border-[#F3D9CF]" alt="Arrival Preview" />
+                    <button
+                      type="button"
+                      onClick={() => removeArrivalImage(i)}
+                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </section>
 
-            {/* FOOTER CON LOS DOS BOTONES */}
             <footer className="flex justify-end gap-4 pt-4 items-center">
-              <button 
-                type="button" 
-                onClick={() => router.push('/explore')}
-                className="text-gray-500 font-bold px-6 py-2 hover:text-[#D2693E] transition-colors"
-              >
-                View  
-              </button>
-
-              <button 
-                disabled={loading}
-                type="submit" 
-                className="bg-[#D2693E] text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {loading ? 'Publishing...' : 'Publish Experience'}
+              <button type="button" onClick={() => router.push('/explore')} className="text-gray-500 font-bold px-6 py-2 hover:text-[#D2693E]">View</button>
+              <button disabled={loading} type="submit" className="bg-[#D2693E] text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
+                {loading ? 'Saving...' : (initialData ? 'Update Experience' : 'Publish Experience')}
               </button>
             </footer>
           </form>

@@ -2,10 +2,11 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { cookies } from 'next/headers'; // Para leer la sesión/rol del usuario
-import { jwtVerify } from 'jose'; // Para desencriptar tu JWT
-import NavbarUser from '@/components/shared/navbar'; // Tu navbar unificado dinámico
+import { cookies } from 'next/headers'; 
+import { jwtVerify } from 'jose'; 
+import NavbarUser from '@/components/shared/navbar'; 
 import AvailabilityDisplay from '@/components/experiences/AvailabilityDisplay'; 
+import Link from 'next/link';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
@@ -33,14 +34,19 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
+  console.log("Cookie encontrada:", token ? "SÍ" : "NO");
+  console.log("Valor de la cookie:", token);
   
   let currentRole: 'TOURIST' | 'HOST' = 'TOURIST';
+  let userId: string = '';
 
   if (token) {
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET);
+      console.log("Payload del token:", payload);
       if (payload.role === 'HOST' || payload.role === 'TOURIST') {
         currentRole = payload.role as 'TOURIST' | 'HOST';
+          userId = String(payload.userId || payload.sub || payload.id || '');
       }
     } catch (err) {
       console.error("Error verificando token en Detalle de Experiencia:", err);
@@ -50,13 +56,18 @@ export default async function MicroexperiencePage({ params }: PageProps) {
   const isTourist = currentRole === 'TOURIST';
 
   const experience = await prisma.experience.findUnique({
-    where: { id },
-    include: {
-      host: { select: { fullName: true, role: true, profileImage: true } }
-    }
-  });
+  where: { id },
+  include: {
+    host: { select: { id: true, fullName: true, role: true, profileImage: true } }
+  }
+});
 
   if (!experience) notFound();
+
+  // Función para formatear el horario
+  const formatSlot = (exp: any) => {
+    return `${exp.startTime} - ${exp.endTime}`;
+  };
 
   const hostDisplayName = experience.host.fullName.split(' ').slice(0, 2).join(' ');
   const hostImage = experience.host.profileImage || "/avatar.png";
@@ -73,7 +84,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
     <div className="min-h-screen bg-white font-sans">
       <style>{calendarStyles}</style>
       
-      <NavbarUser role={currentRole} />
+      <NavbarUser role={currentRole} userId={userId} />
 
       <main className="max-w-7xl mx-auto px-6 py-10 text-[#4A3933]">
         
@@ -93,7 +104,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
             </div>
           ))}
         </div>
-
+        
         {/* --- TÍTULO Y UBICACIÓN --- */}
         <section className="mb-12 border-b border-gray-100 pb-8">
           <h1 className="text-4xl md:text-5xl font-bold mb-3 text-[#4A3933] tracking-tight">{experience.title}</h1>
@@ -120,43 +131,43 @@ export default async function MicroexperiencePage({ params }: PageProps) {
               <div>
                 <h2 className="text-sm uppercase tracking-[0.3em] font-bold mb-6 text-[#D2693E]">Arrival Guide</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {experience.arrivalImages.map((img, index) => {
-                    console.log(`Debug Arrival Image #${index}:`, img);
-                    return (
-                      <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner h-48">
-                        <Image 
-                          src={img} 
-                          alt={`Arrival Guide ${index + 1}`}
-                          fill
-                          priority={index === 0}
-                          quality={100}
-                          sizes="(max-width: 768px) 100vw, 33vw"
-                          className="object-cover transition-transform duration-700 group-hover:scale-105"
-                        />
-                      </div>
-                    );
-                  })}
+                  {experience.arrivalImages.map((img, index) => (
+                    <div key={index} className="relative overflow-hidden bg-gray-100 group rounded-lg shadow-inner h-48">
+                      <Image 
+                        src={img} 
+                        alt={`Arrival Guide ${index + 1}`}
+                        fill
+                        priority={index === 0}
+                        quality={100}
+                        sizes="(max-width: 768px) 100vw, 33vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {/* Host*/}
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner">
-              <div className="relative w-32 h-32 shrink-0 overflow-hidden rounded-full shadow-inner bg-white">
-                <Image 
-                  src={hostImage} 
-                  alt={hostDisplayName}
-                  fill
-                  sizes="128px"
-                  className="object-cover"
-                />
-              </div>
-              <div className="flex flex-col justify-center text-center sm:text-left">
-                <p className="text-[10px] font-bold text-[#D2693E] uppercase tracking-widest mb-2">Meet your host</p>
-                <h3 className="text-3xl font-bold text-[#4A3933] mb-1">{hostDisplayName}</h3>
-                <p className="text-sm text-gray-500 italic">Experience Artisan</p>
-              </div>
-            </div>
+<Link 
+  href={`/profile/${experience.host.id}`} 
+  className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner block"
+>
+  <div className="relative w-32 h-32 shrink-0 overflow-hidden rounded-full shadow-inner bg-white">
+    <Image 
+      src={hostImage} 
+      alt={hostDisplayName}
+      fill
+      sizes="128px"
+      className="object-cover"
+    />
+  </div>
+  <div className="flex flex-col justify-center text-center sm:text-left">
+    <p className="text-[10px] font-bold text-[#D2693E] uppercase tracking-widest mb-2">Meet your host</p>
+    <h3 className="text-3xl font-bold text-[#4A3933] mb-1">{hostDisplayName}</h3>
+    <p className="text-sm text-gray-500 italic">Experience Artisan</p>
+  </div>
+</Link>
 
             {/* Disponibilidad */}
             <div className="pt-4">
@@ -174,6 +185,13 @@ export default async function MicroexperiencePage({ params }: PageProps) {
                 <div>
                   <span className="text-gray-400 text-[10px] block uppercase font-bold tracking-widest mb-1">Total per person</span>
                   <span className="text-5xl font-bold text-[#4A3933]">${experience.pricePerPerson}</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="items-end">
+                  <span className="text-gray-400 text-[9px] uppercase font-bold block">Time</span>
+                  <span className="text-[#4A3933] font-medium text-lg">{formatSlot(experience)}</span>
                 </div>
               </div>
 

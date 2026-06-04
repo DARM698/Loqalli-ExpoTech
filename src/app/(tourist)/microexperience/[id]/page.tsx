@@ -1,4 +1,3 @@
-// src/app/(tourist)/microexperience/[id]/page.tsx
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
@@ -34,8 +33,6 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
-  console.log("Cookie encontrada:", token ? "SÍ" : "NO");
-  console.log("Valor de la cookie:", token);
   
   let currentRole: 'TOURIST' | 'HOST' = 'TOURIST';
   let userId: string = '';
@@ -43,10 +40,9 @@ export default async function MicroexperiencePage({ params }: PageProps) {
   if (token) {
     try {
       const { payload } = await jwtVerify(token, JWT_SECRET);
-      console.log("Payload del token:", payload);
       if (payload.role === 'HOST' || payload.role === 'TOURIST') {
         currentRole = payload.role as 'TOURIST' | 'HOST';
-          userId = String(payload.userId || payload.sub || payload.id || '');
+        userId = String(payload.userId || payload.sub || payload.id || '');
       }
     } catch (err) {
       console.error("Error verificando token en Detalle de Experiencia:", err);
@@ -56,19 +52,25 @@ export default async function MicroexperiencePage({ params }: PageProps) {
   const isTourist = currentRole === 'TOURIST';
 
   const experience = await prisma.experience.findUnique({
-  where: { id },
-  include: {
-    host: { select: { id: true, fullName: true, role: true, profileImage: true } }
-  }
-});
+    where: { id },
+    include: {
+      host: { 
+        select: { id: true, fullName: true, role: true, profileImage: true } 
+      },
+      Booking: {
+        where: { status: { not: 'CANCELLED' } },
+        select: { date: true, guests: true }
+      }
+    }
+  });
 
   if (!experience) notFound();
 
-  // Función para formatear el horario
-  const formatSlot = (exp: any) => {
-    return `${exp.startTime} - ${exp.endTime}`;
-  };
+  // Cálculo de cupos restantes
+  const totalBooked = experience.Booking.reduce((acc, b) => acc + b.guests, 0);
+  const remainingSpots = experience.maxParticipants - totalBooked;
 
+  const formatSlot = (exp: any) => `${exp.startTime} - ${exp.endTime}`;
   const hostDisplayName = experience.host.fullName.split(' ').slice(0, 2).join(' ');
   const hostImage = experience.host.profileImage || "/avatar.png";
 
@@ -126,7 +128,7 @@ export default async function MicroexperiencePage({ params }: PageProps) {
               </p>
             </div>
 
-            {/*Arrival Images*/}
+            {/* Arrival Images*/}
             {experience.arrivalImages && experience.arrivalImages.length > 0 && (
               <div>
                 <h2 className="text-sm uppercase tracking-[0.3em] font-bold mb-6 text-[#D2693E]">Arrival Guide</h2>
@@ -149,25 +151,25 @@ export default async function MicroexperiencePage({ params }: PageProps) {
             )}
 
             {/* Host*/}
-<Link 
-  href={`/profile/${experience.host.id}`} 
-  className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner block"
->
-  <div className="relative w-32 h-32 shrink-0 overflow-hidden rounded-full shadow-inner bg-white">
-    <Image 
-      src={hostImage} 
-      alt={hostDisplayName}
-      fill
-      sizes="128px"
-      className="object-cover"
-    />
-  </div>
-  <div className="flex flex-col justify-center text-center sm:text-left">
-    <p className="text-[10px] font-bold text-[#D2693E] uppercase tracking-widest mb-2">Meet your host</p>
-    <h3 className="text-3xl font-bold text-[#4A3933] mb-1">{hostDisplayName}</h3>
-    <p className="text-sm text-gray-500 italic">Experience Artisan</p>
-  </div>
-</Link>
+            <Link 
+              href={`/profile/${experience.host.id}`} 
+              className="flex flex-col sm:flex-row items-center gap-6 p-6 border border-gray-100 bg-white group transition-colors hover:border-[#F3D9CF] rounded-xl shadow-inner block"
+            >
+              <div className="relative w-32 h-32 shrink-0 overflow-hidden rounded-full shadow-inner bg-white">
+                <Image 
+                  src={hostImage} 
+                  alt={hostDisplayName}
+                  fill
+                  sizes="128px"
+                  className="object-cover"
+                />
+              </div>
+              <div className="flex flex-col justify-center text-center sm:text-left">
+                <p className="text-[10px] font-bold text-[#D2693E] uppercase tracking-widest mb-2">Meet your host</p>
+                <h3 className="text-3xl font-bold text-[#4A3933] mb-1">{hostDisplayName}</h3>
+                <p className="text-sm text-gray-500 italic">Experience Artisan</p>
+              </div>
+            </Link>
 
             {/* Disponibilidad */}
             <div className="pt-4">
@@ -197,8 +199,10 @@ export default async function MicroexperiencePage({ params }: PageProps) {
 
               <div className="grid grid-cols-2 gap-4 py-6 border-y border-gray-100">
                 <div>
-                  <span className="text-gray-400 text-[9px] uppercase font-bold block">Capacity</span>
-                  <span className="text-[#4A3933] font-medium text-lg">{experience.maxParticipants} people</span>
+                  <span className="text-gray-400 text-[9px] uppercase font-bold block">Availability</span>
+                  <span className="text-[#4A3933] font-medium text-lg">
+                    {remainingSpots > 0 ? `${remainingSpots} spots left` : "Sold out"}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-400 text-[9px] uppercase font-bold block">Payment</span>
@@ -206,14 +210,17 @@ export default async function MicroexperiencePage({ params }: PageProps) {
                 </div>
               </div>
 
-              {isTourist && (
-                <button className="w-full bg-[#D2693E] hover:opacity-90 text-white font-bold py-6 transition-all duration-300 uppercase tracking-widest text-sm shadow-md rounded-lg active:translate-y-1">
+              {isTourist && remainingSpots > 0 && (
+                <Link 
+                  href={`/book/${id}`}
+                  className="bg-[#D2693E] text-white px-6 py-2 rounded text-sm font-bold hover:bg-[#b05832] transition-colors block text-center"
+                >
                   Book this experience
-                </button>
+                </Link>
               )}
 
               <p className="text-[10px] text-center text-gray-400 font-medium leading-tight">
-                Availability is limited to the dates shown in the calendar.
+                {remainingSpots > 0 ? "Availability is limited to the dates shown in the calendar." : "This experience is currently sold out."}
               </p>
             </div>
           </aside>

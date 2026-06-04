@@ -261,39 +261,68 @@ export async function uploadProfileImageDirectly(userId: string, formData: FormD
   }
 }
 
-export async function createBooking(data: {
-  experienceId: string;
-  touristId: string;
-  date: string;
-  time: string;
-  guests: number;
-}) {
+export async function createBooking(data: any) {
+  // 1. Obtener token y verificar usuario en el servidor
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+  if (!token) throw new Error("No autenticado");
+
+  const { payload } = await jwtVerify(token, JWT_SECRET);
+  const touristId = payload.id as string;
+
   return await prisma.$transaction(async (tx) => {
     const experience = await tx.experience.findUnique({
       where: { id: data.experienceId },
-      select: { maxParticipants: true },
+      select: { pricePerPerson: true },
     });
-    const currentBookings = await tx.booking.aggregate({
-      where: {
+
+    if (!experience) throw new Error("Experiencia no encontrada");
+
+    // 2. Usar el touristId obtenido del token
+    const booking = await tx.booking.create({
+      data: {
         experienceId: data.experienceId,
+        touristId: touristId, 
         date: data.date,
         time: data.time,
-        status: { not: "CANCELLED" },
+        guests: data.guests,
+        status: "CONFIRMED",
       },
-      _sum: { guests: true },
     });
 
-    const totalReserved = currentBookings._sum.guests || 0;
-
-    if (totalReserved + data.guests > (experience?.maxParticipants || 0)) {
-      throw new Error("No hay suficientes cupos disponibles para esta fecha.");
+    if (data.bankInfo) {
+      await tx.bankInfo.upsert({
+        where: { userId: touristId },
+        update: {
+          accountHolder: data.bankInfo.accountHolder,
+          bankName: data.bankInfo.bankName,
+          accountType: data.bankInfo.accountType,
+          accountNumber: data.bankInfo.accountNumber,
+          routingNumber: data.bankInfo.routingNumber,
+        },
+        create: {
+          userId: touristId,
+          ...data.bankInfo,
+        },
+      });
     }
 
-    return await tx.booking.create({
+    const subtotal = experience.pricePerPerson * data.guests;
+    const loqalliFee = subtotal * 0.05;
+    const hostPayout = subtotal - loqalliFee; 
+
+    await tx.transaction.create({
       data: {
-        ...data,
-        status: "CONFIRMED", 
+        bookingId: booking.id,
+        touristId: touristId,
+        totalAmount: subtotal,
+        loqalliFee: loqalliFee,
+        hostPayout: hostPayout,
+        paymentStatus: "COMPLETED", 
+        payoutStatus: "PENDING",   
       },
     });
+
+    return booking;
   });
 }

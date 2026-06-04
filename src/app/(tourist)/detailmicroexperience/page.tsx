@@ -1,3 +1,4 @@
+import BookingButton from "@/components/experiences/BookingButton";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma"; 
@@ -114,9 +115,7 @@ export default async function ExperienceDetailsPage({ params }: PageProps) {
 
         {/*  */}
         <div className="mt-6 max-w-2xl">
-          <button className="w-full bg-[#D17842] hover:bg-[#b86332] text-white py-3.5 rounded-lg font-medium transition shadow-sm text-sm tracking-wide">
-            Book this experience (Pay with {experience.paymentMethod})
-          </button>
+          <BookingButton experience={experience} />
         </div>
 
         {/* TABS DE DETALLES USANDO CAMPOS REALES */}

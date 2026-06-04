@@ -47,7 +47,7 @@ export default async function LoqalliReviewPage({ params }: PageProps) {
   if (!experience) {
     return (
       <div className="text-center py-20 font-sans text-slate-600">
-        Loqalli Error: La experiencia que intentas calificar no existe.
+        Loqalli Error: The experience you are trying to describe does not exist.
       </div>
     );
   }
@@ -67,7 +67,7 @@ export default async function LoqalliReviewPage({ params }: PageProps) {
       <div className="text-center py-20 font-sans text-[#4A3933] max-w-md mx-auto px-4">
         <h2 className="text-2xl font-serif text-[#D2693E] mb-2">Access Denied</h2>
         <p className="text-sm text-gray-500">
-          Solo puedes dejar una reseña si reservaste y completaste esta microexperiencia con éxito.
+         You can only leave a review if you booked and successfully completed this micro-experience.
         </p>
       </div>
     );

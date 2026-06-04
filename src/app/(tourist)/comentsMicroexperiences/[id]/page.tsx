@@ -57,7 +57,7 @@ export default async function LoqalliReviewPage({ params }: PageProps) {
     where: {
       touristId: currentUserId,   // ID del turista logueado
       experienceId: experienceId, // ID de la experiencia de la URL
-      Status: "COMPLETED"         // Asegura que el estado sea COMPLETADO (ya asistió y finalizó)
+      Status: "CONFIRMED"         // Asegura que el estado sea COMPLETADO (ya asistió y finalizó)
     }
   });
 

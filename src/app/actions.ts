@@ -326,3 +326,30 @@ export async function createBooking(data: any) {
     return booking;
   });
 }
+
+export async function confirmBooking(bookingId: string) {
+  try {
+    // 1. Actualizamos el estado en la base de datos a CONFIRMED
+    await prisma.booking.update({
+      where: { 
+        id: bookingId 
+      },
+      data: { 
+        status: "CONFIRMED" 
+      },
+    });
+
+    revalidatePath("/dashboard");
+
+    return { 
+      success: true, 
+      message: "Reserva confirmada exitosamente." 
+    };
+  } catch (error) {
+    console.error("Error al confirmar la reserva:", error);
+    return { 
+      success: false, 
+      message: "No se pudo confirmar la reserva. Inténtalo de nuevo." 
+    };
+  }
+}

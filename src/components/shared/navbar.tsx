@@ -4,7 +4,7 @@ import { usePathname } from 'next/navigation';
 
 interface NavbarUserProps {
   role: 'TOURIST' | 'HOST';
-  userId: string; // Recibimos el ID como prop
+  userId: string;
 }
 
 export default function NavbarUser({ role, userId }: NavbarUserProps) {
@@ -26,20 +26,18 @@ export default function NavbarUser({ role, userId }: NavbarUserProps) {
     : [
         { name: 'Explore', href: '/explore' },
         { name: 'Create Experience', href: '/uploadMicroexperiences' },
-        { name: 'Agenda / Calendar', href: '/host/agenda' },
+        { name: 'Agenda / Calendar', href: '/dashboard' },
         { name: 'Profile', href: profileHref },
       ];
 
   return (
     <nav className="w-full bg-white border-b border-[#F3D9CF] px-6 py-4 flex items-center justify-between sticky top-0 z-[100]">
-      {/* ... resto del código del nav igual ... */}
       <div className="flex items-center gap-12">
         <Link href={isTourist ? "/explore" : "/host"} className="text-2xl font-serif font-bold text-[#D2693E]">
           Loqalli
         </Link>
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => {
-            // Ajuste: verificamos si incluye el href para marcarlo como activo
             const isActive = pathname === link.href;
             return (
               <Link

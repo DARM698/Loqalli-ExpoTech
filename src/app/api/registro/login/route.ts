@@ -52,7 +52,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 🌟 CREACIÓN DEL TOKEN JWT SEGÚN ROLES
     const token = await new SignJWT({ 
         id: user.id, 
         email: user.email, 
@@ -60,7 +59,7 @@ export async function POST(request: Request) {
       })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('1d') // Expira en 1 día
+      .setExpirationTime('1d') 
       .sign(JWT_SECRET);
 
     const response = NextResponse.json({
@@ -73,12 +72,11 @@ export async function POST(request: Request) {
       }
     });
 
-    // 🌟 GUARDAR EL TOKEN EN UNA COOKIE HTTP-ONLY SEGURA
     response.cookies.set('session_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 1 día en segundos
+      maxAge: 60 * 60 * 24, 
       path: '/',
     });
 

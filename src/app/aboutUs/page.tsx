@@ -1,3 +1,7 @@
+'use client'
+import Link from 'next/link';
+import Image from 'next/image';
+
 export default function AboutPage() {
   return (
     <main className="flex flex-col font-sans text-slate-800">
@@ -5,9 +9,9 @@ export default function AboutPage() {
       {/* NAVBAR */}
 <nav className="w-full absolute top-0 left-0 z-50 px-6 py-6 flex justify-between items-center text-white">
 
-  <h1 className="text-2xl font-serif italic tracking-tight">
-    Loqalli
-  </h1>
+   <Link href="/">
+       <Image src="/logo1.png" alt="Logo" width={150} height={150} className="w-16 md:w-38" />
+      </Link>
 
   <div className="flex gap-6 text-sm font-semibold">
     <a href="/about" className="text-[#D17842]">

@@ -1,13 +1,17 @@
 'use client'
  
+import Link from 'next/link';
+import Image from 'next/image';
+
 export default function Login(){
- 
- 
-    return(
+
+ return(
         <>
         <nav className={`fixed w-full z-50 transition-all  top-4 duration-500 px-6 md:px-10'py-4 bg-white/90 backdrop-blur-md shadow-sm' : 'py-8 bg-transparent'}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h1>
+          <Link href="/">
+       <Image src="/logo1.png" alt="Logo" width={150} height={150} className="w-16 md:w-38" />
+      </Link>
         </div>
 
     <div className="bg-white h-screen flex items-center justify-center text-black">

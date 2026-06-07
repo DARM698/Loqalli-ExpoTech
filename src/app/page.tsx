@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Search, Sparkles, Users, Palette, Send, ArrowRight } from 'lucide-react';
 // IMPORTANTE: Importamos Link para la navegación nativa
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Home() {
   const [imgIndex, setImgIndex] = useState(0);
@@ -39,8 +40,7 @@ export default function Home() {
         });
       }, observerOptions);
 
-      document.querySelectorAll('.reveal').forEach((el) => observer?.observe(el));
-    }, 100);
+      document.querySelectorAll('.reveal').forEach((el) => observer?.observe(el)); }, 100);
 
     return () => {
       clearTimeout(timeoutId);
@@ -54,26 +54,29 @@ export default function Home() {
     <main className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#D17842] selection:text-white">
       
       {/* 1. NAVEGACIÓN */}
-      <nav className={`fixed w-full z-50 transition-all duration-500 px-6 md:px-10 ${
-        mounted && isScrolled ? 'py-4 bg-white/90 backdrop-blur-md shadow-sm' : 'py-8 bg-transparent'
+      <nav className={`fixed w-full z-50 transition-all duration-500 px-2 md:px-5 ${
+        mounted && isScrolled ? 'py-2 bg-white shadow-sm' : 'py-2 bg-white  shadow-sm'
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h1>
           
+          <div className="flex-shrink-0">
+            <Image src="/logo1.png" alt="Logo" width={150} height={150} />
+          </div>
+
           <div className="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-            <a href="#" className="hover:text-[#D17842] transition-colors">About us</a>
+            <Link href="/aboutUs" className="hover:text-[#DA653B] transition-colors"> About us </Link>
           </div>
 
           <div className="flex items-center gap-3">
             <Link 
               href="/register" 
-              className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
+              className="px-3 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
             >
               Log in
             </Link>
             <Link 
               href="/register" 
-              className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
+              className="px-3 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
             >
               Sign Up
             </Link>
@@ -233,7 +236,7 @@ export default function Home() {
       <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
           <div className="space-y-8">
-            <h3 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h3>
+            <Image src="/logo.png" alt="Logo" width={130} height={130} />
             <p className="text-slate-400 text-sm leading-relaxed">Crafting connections across the artisanal landscape of El Salvador.</p>
           </div>
           <div className="space-y-6">
@@ -250,13 +253,6 @@ export default function Home() {
               <li><a href="#" className="hover:text-[#D17842] transition-colors">Terms of Service</a></li>
               <li><a href="#" className="hover:text-[#D17842] transition-colors">Privacy Policy</a></li>
             </ul>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Newsletter</h4>
-            <div className="flex border-b border-slate-200 pb-3 group-focus-within:border-[#D17842] transition-colors">
-              <input type="email" placeholder="Your email address" className="bg-transparent outline-none text-sm flex-1 text-slate-600 italic" />
-              <button className="text-[#D17842] hover:translate-x-1 transition-transform"><Send size={18} /></button>
-            </div>
           </div>
         </div>
         <div className="max-w-7xl mx-auto pt-8 border-t border-slate-50 text-center text-[9px] text-slate-400 font-bold tracking-[0.4em] uppercase">

@@ -48,9 +48,7 @@ export default function RegisterWelcomePage() {
         <p>Already have an account?</p>
         <Link 
           href="/login" 
-          className="text-[#D17842] hover:text-[#b05e30] transition-colors underline underline-offset-4"
-        >
-          Log in
+          className="text-[#D17842] hover:text-[#b05e30] transition-colors underline underline-offset-4"> Log in
         </Link>
       </div>
     </main>

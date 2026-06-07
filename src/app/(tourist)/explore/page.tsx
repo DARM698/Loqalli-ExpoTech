@@ -61,7 +61,7 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <NavbarUser />
+      <NavbarUser/>
       
       <main className="max-w-7xl mx-auto px-6 py-10">
         <section className="mb-6">

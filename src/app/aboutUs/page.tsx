@@ -1,50 +1,60 @@
-'use client'
+import { cookies } from 'next/headers';
+import { jwtVerify } from 'jose';
+import NavbarUser from '@/components/shared/navbar'; // Asegúrate de que esta ruta sea la correcta
 import Link from 'next/link';
 import Image from 'next/image';
 
-export default function AboutPage() {
+const JWT_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
+);
+
+export default async function AboutPage() {
+  // Lógica para obtener el usuario actual desde la cookie
+  const cookieStore = await cookies();
+  const token = cookieStore.get('session_token')?.value;
+  let userSession = { role: 'TOURIST' as 'TOURIST' | 'HOST', id: '' };
+
+  if (token) {
+    try {
+      const { payload } = await jwtVerify(token, JWT_SECRET);
+      userSession = {
+        role: (payload.role as 'TOURIST' | 'HOST') || 'TOURIST',
+        id: payload.id as string
+      };
+    } catch (err) {
+      console.error("Error al validar sesión:", err);
+    }
+  }
+
   return (
     <main className="flex flex-col font-sans text-slate-800">
+      {/* Navbar integrado */}
+      <NavbarUser role={userSession.role} userId={userSession.id} />
 
-      {/* NAVBAR */}
-<nav className="w-full absolute top-0 left-0 z-50 px-6 py-6 flex justify-between items-center text-white">
+      <section
+        className="relative h-[500px] flex items-center justify-center text-center"
+        style={{
+          backgroundImage:
+            "url('https://img.freepik.com/foto-gratis/hermosos-artesanos-sentados-banco-rueda-alfarero-haciendo-vasijas-barro-productos-hechos-mano_257488-4022.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        {/* Overlay*/}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20"></div>
 
-   <Link href="/">
-       <Image src="/logo1.png" alt="Logo" width={150} height={150} className="w-16 md:w-38" />
-      </Link>
+        {/* Contenido */}
+        <div className="relative z-10 px-6 text-white max-w-4xl">
+          <h1 className="text-7xl md:text-8xl font-serif font-medium tracking-tight">
+            About Us
+          </h1>
 
-  <div className="flex gap-6 text-sm font-semibold">
-    <a href="/about" className="text-[#D17842]">
-      About
-    </a>
-  </div>
-
-</nav>
-
-    <section
-  className="relative h-[500px] flex items-center justify-center text-center"
-  style={{
-    backgroundImage:
-      "url('https://img.freepik.com/foto-gratis/hermosos-artesanos-sentados-banco-rueda-alfarero-haciendo-vasijas-barro-productos-hechos-mano_257488-4022.jpg')",
-    backgroundSize: "cover",
-    backgroundPosition: "center",
-  }}
->
-  {/* Overlay*/}
-  <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20"></div>
-
-  {/* Contenido */}
-  <div className="relative z-10 px-6 text-white max-w-4xl">
-    <h1 className="text-7xl md:text-8xl font-serif font-medium tracking-tight">
-      About Us
-    </h1>
-
-    <p className="mt-6 text-lg text-gray-200 leading-relaxed">
-      Local knowledge and tourists curiosity by offering unique
-      micro-experiences hosted by local individuals.
-    </p>
-  </div>
-</section>
+          <p className="mt-6 text-lg text-gray-200 leading-relaxed">
+            Local knowledge and tourists curiosity by offering unique
+            micro-experiences hosted by local individuals.
+          </p>
+        </div>
+      </section>
 
       {/* BLOQUE 1 */}
       <section className="py-16 px-10 bg-gray-100">
@@ -60,7 +70,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-         <img 
+          <img 
             src="https://artepopularchihuahua.mx/ap/images/pintura-artesanal-tarahumara-madera-chihuahua.jpg"
             alt="Artisan hands"
           />
@@ -72,7 +82,7 @@ export default function AboutPage() {
       <section className="py-16 px-10 bg-white">
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
 
-         <img 
+          <img 
             src="https://images.unsplash.com/photo-1621846323386-a60faf26f962?blend=000000&blend-alpha=10&blend-mode=normal&blend-w=1&crop=faces%2Cedges&h=630&mark=https:%2F%2Fimages.unsplash.com%2Fopengraph%2Flogo.png&mark-align=top%2Cleft&mark-pad=50&mark-w=64&w=1200&auto=format&fit=crop&q=60&ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzOTAzMDIwfA&ixlib=rb-4.0.3" 
             className="w-full h-full object-cover"
             alt="Artisan hands"
@@ -105,7 +115,7 @@ export default function AboutPage() {
             </p>
           </div>
 
-         <img 
+          <img 
             src="https://i.ytimg.com/vi/6D3JLA5dX0I/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGHIgTyg-MA8=&rs=AOn4CLCc1_oLx17lW38tLOe4ixz8jmDzsw"
             alt="Artisan hands"
           />
@@ -144,23 +154,6 @@ export default function AboutPage() {
             </p>
           </div>
 
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="bg-[#D17842] py-24 text-center px-6">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-white mb-6">
-            Ready to explore something real?
-          </h2>
-
-          <p className="text-white/80 mb-8 text-lg">
-            Discover authentic experiences and connect with local culture.
-          </p>
-
-          <button className="bg-white text-[#D17842] px-8 py-4 rounded-xl font-bold hover:scale-105 transition">
-            Start your journey
-          </button>
         </div>
       </section>
 

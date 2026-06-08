@@ -7,7 +7,6 @@ import { format, parseISO } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import 'react-day-picker/dist/style.css';
 import { X } from 'lucide-react';
-import NavbarUser from '@/components/shared/navbar';
 
 const DynamicMap = dynamic(() => import('@/components/Map'), { 
   ssr: false,
@@ -184,7 +183,6 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
 
   return (
     <div suppressHydrationWarning>
-      <NavbarUser role="HOST" userId="host" />
       
       {!mounted ? (
         <div className="min-h-screen bg-white p-8 animate-pulse flex items-center justify-center">
@@ -240,7 +238,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
               <textarea name="description" defaultValue={initialData?.description} required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <input name="price" defaultValue={initialData?.price} required type="number" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
+                <input name="price" defaultValue={initialData?.price} required type="number" min="1" step="0.01" placeholder="Price ($)" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
                 <input name="participants" defaultValue={initialData?.participants} required type="number" min={1} max={8} placeholder="Max People" className={`w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none ${noArrowsClass} focus:ring-2 focus:ring-[#D2693E]`} />
               </div>
             </section>

@@ -127,6 +127,7 @@ export const IdentityUpload = ({ onChangeData, role }: IdentityUploadProps) => {
           </label>
           <input
             name="documentNumber"
+            type="number"
             placeholder={docType === 'DUI' ? "00000000-0" : "A00000000"}
             onChange={(e) => onChangeData({ documentNumber: e.target.value })}
             className="w-full p-2 bg-[#f3eee7] rounded outline-none text-sm"

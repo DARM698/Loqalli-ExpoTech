@@ -4,6 +4,7 @@ import { jwtVerify } from 'jose';
 import Link from 'next/link';
 import ExperienceActions from '@/components/experiences/ExperiencesActions';
 import ProfileImageUploader from '@/components/ProfileImageUploader';
+import NavbarUser from '@/components/shared/navbar'; // Importa tu Navbar
 
 interface ProfilePageProps {
   params: Promise<{ id: string }>;
@@ -11,15 +12,12 @@ interface ProfilePageProps {
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { id: profileId } = await params;
-  console.log("--- DEBUG: Perfil cargado ---");
-  console.log("ID recibido en params:", profileId); 
-  console.log("Typeof profileId:", typeof profileId);
 
-  console.log("Buscando usuario con ID:", profileId);
+  // 1. Obtener sesión del usuario actual
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
   
-  let currentUserId: string | null = null;
+  let currentUser = { id: '', role: 'TOURIST' as 'TOURIST' | 'HOST' };
 
   if (token) {
     try {
@@ -27,16 +25,18 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         token,
         new TextEncoder().encode(process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres')
       );
-      currentUserId = payload.id as string;
+      currentUser = { 
+        id: payload.id as string, 
+        role: payload.role as 'TOURIST' | 'HOST' 
+      };
     } catch (error) {
       console.error("Error verificando sesión:", error);
     }
   }
 
-  // Determinar si el visitante es el dueño del perfil
-  const isOwner = currentUserId === profileId;
+  const isOwner = currentUser.id === profileId;
 
-  // 2. Consulta a la base de datos (buscamos el usuario por el ID de la URL)
+  // 2. Consulta a la base de datos
   const user = await prisma.user.findUnique({
     where: { id: profileId },
     include: {
@@ -56,6 +56,9 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <main className="bg-[#f8f6f3] min-h-screen text-slate-800 pb-20">
+      {/* Navbar insertado aquí */}
+      <NavbarUser role={currentUser.role} userId={currentUser.id} />
+
       {/* HERO */}
       <section className="max-w-7xl mx-auto mt-8 px-6">
         <div className="relative h-[420px] rounded-3xl overflow-hidden bg-cover bg-center"
@@ -68,7 +71,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 alt={user.fullName} 
                 className="w-40 h-40 rounded-full border-4 border-white object-cover shadow-xl" 
               />
-              {/* Solo el dueño puede editar su foto */}
               {isOwner && <ProfileImageUploader userId={user.id} />}
             </div>
             <div className="text-white">
@@ -89,7 +91,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
             ) : <p className="mt-8 text-gray-500 italic">No ratings yet</p>}
           </div>
           <div className="flex items-center justify-center">
-            {/* Solo el dueño ve el botón de gestionar */}
             {isOwner && user.role === 'HOST' && (
               <button className="bg-[#D17842] text-white px-10 py-4 rounded-xl font-semibold">
                 Manage Workshops
@@ -107,17 +108,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         </div>
       </section>
 
-      {/* EXPERIENCIAS (Si es HOST) */}
+      {/* EXPERIENCIAS */}
       {user.role === 'HOST' && (
         <section className="max-w-7xl mx-auto px-6 pt-20">
           <h2 className="text-5xl font-serif font-bold mb-12">Micro-experiences</h2>
           <div className="grid md:grid-cols-2 gap-10">
             {experiences.map((exp) => (
               <div key={exp.id} className="bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col relative">
-                
-                {/* Solo el dueño puede ver los botones de editar/eliminar */}
                 {isOwner && <ExperienceActions experienceId={exp.id} />}
-
                 {exp.images && exp.images.length > 0 && (
                   <img src={exp.images[0]} alt={exp.title} className="w-full h-64 object-cover" />
                 )}
@@ -126,10 +124,8 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   <p className="text-slate-600 mt-4 line-clamp-3">{exp.description}</p>
                 </div>
                 <div className="px-8 pb-8">
-                  <Link 
-                    href={`/microexperience/${exp.id}`}
-                    className="inline-block bg-[#D17842] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#b86532] transition-colors"
-                  >
+                  <Link href={`/microexperience/${exp.id}`}
+                    className="inline-block bg-[#D17842] text-white px-8 py-3 rounded-xl font-semibold hover:bg-[#b86532] transition-colors">
                     Explore Details
                   </Link>
                 </div>

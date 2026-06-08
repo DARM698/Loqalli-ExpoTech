@@ -97,7 +97,7 @@ model Booking {
   createdAt    DateTime      @default(now())
   experienceId String
   touristId    String
-  Experience   Experience    @relation(fields: [experienceId], references: [id])
+  Experience Experience @relation(fields: [experienceId], references: [id], onDelete: Cascade)
   User         User          @relation(fields: [touristId], references: [id])
   Transaction  Transaction[]
 }

@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import { PaymentMethod } from '@prisma/client';
+import { redirect } from 'next/dist/client/components/navigation';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
@@ -352,4 +353,14 @@ export async function confirmBooking(bookingId: string) {
       message: "No se pudo confirmar la reserva. Inténtalo de nuevo." 
     };
   }
+}
+
+export async function signOut() {
+  const cookieStore = await cookies();
+  
+  // Eliminamos la cookie 'session_token'
+  cookieStore.delete('session_token');
+  
+  // Redirigimos al usuario a la página principal o login
+  redirect('/');
 }

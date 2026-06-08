@@ -21,20 +21,22 @@ interface PageProps {
 export default async function HomePage({ searchParams }: PageProps) {
   const { search, category, priceRange } = await searchParams;
 
-  // 1. LEER EL TOKEN DE SESIÓN REAL (Igual que en tu middleware)
+  // 1. LEER EL TOKEN DE SESIÓN REAL
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
   
-  let currentRole: 'TOURIST' | 'HOST' = 'TOURIST';
+  let userSession = {
+    role: 'TOURIST' as 'TOURIST' | 'HOST',
+    id: ''
+  };
 
   if (token) {
     try {
-      // Desencriptamos el JWT directamente en el servidor
       const { payload } = await jwtVerify(token, JWT_SECRET);
-      
-      if (payload.role === 'HOST' || payload.role === 'TOURIST') {
-        currentRole = payload.role as 'TOURIST' | 'HOST';
-      }
+      userSession = {
+        role: (payload.role as 'TOURIST' | 'HOST') || 'TOURIST',
+        id: payload.id as string
+      };
     } catch (err) {
       console.error("Error verificando token en Explore:", err);
     }
@@ -61,7 +63,8 @@ export default async function HomePage({ searchParams }: PageProps) {
 
   return (
     <div className="min-h-screen bg-white">
-      <NavbarUser/>
+      {/* Pasamos las props necesarias al Navbar */}
+      <NavbarUser role={userSession.role} userId={userSession.id} />
       
       <main className="max-w-7xl mx-auto px-6 py-10">
         <section className="mb-6">

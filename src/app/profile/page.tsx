@@ -1,3 +1,5 @@
+import Footer from '@/components/Footer/Footer';
+ 
 export default function DashboardPage() {
   return (
     <main className="bg-[#f8f6f3] min-h-screen text-slate-800">
@@ -233,68 +235,7 @@ export default function DashboardPage() {
 
         </div>
       </section>
-
-      {/* FOOTER */}
-      <footer className="bg-white border-t border-gray-200 py-20 px-10">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-4 gap-16">
-
-          <div>
-            <h3 className="text-3xl font-bold text-[#D17842] font-serif">
-              Loqalli
-            </h3>
-
-            <p className="mt-6 text-slate-500 leading-relaxed">
-              Crafting connections across the artisanal landscape of El Salvador.
-            </p>
-          </div>
-
-          <div>
-            <h4 className="uppercase text-sm tracking-[0.2em] mb-6">
-              Host Resources
-            </h4>
-
-            <ul className="space-y-4 text-slate-500">
-              <li>Host an Experience</li>
-              <li>Safety & Standards</li>
-              <li>Help Center</li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="uppercase text-sm tracking-[0.2em] mb-6">
-              Legal
-            </h4>
-
-            <ul className="space-y-4 text-slate-500">
-              <li>Terms of Service</li>
-              <li>Privacy Policy</li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="uppercase text-sm tracking-[0.2em] mb-6">
-              Newsletter
-            </h4>
-
-            <div className="flex">
-              <input
-                type="email"
-                placeholder="Email address"
-                className="border border-gray-300 px-4 py-3 rounded-l-xl w-full outline-none"
-              />
-
-              <button className="bg-[#D17842] text-white px-6 rounded-r-xl">
-                →
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        <div className="text-center text-sm text-slate-400 mt-16 border-t pt-8">
-          © 2026 Loqalli. All rights reserved.
-        </div>
-      </footer>
+        <Footer />
 
     </main>
   );

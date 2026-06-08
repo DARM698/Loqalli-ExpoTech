@@ -1,8 +1,8 @@
-'use client'; 
+'use client';
 import { useState, useEffect } from 'react';
-import { Search, Sparkles, Users, Palette, Send, ArrowRight } from 'lucide-react';
-// IMPORTANTE: Importamos Link para la navegación nativa
+import { Search, Sparkles, Users, Palette, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import Footer from '../components/Footer/Footer';
 
 export default function Home() {
   const [imgIndex, setImgIndex] = useState(0);
@@ -18,7 +18,6 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     
@@ -27,7 +26,6 @@ export default function Home() {
     }, 9000); 
 
     let observer: IntersectionObserver | null = null;
-    
     const timeoutId = setTimeout(() => {
       const observerOptions = { threshold: 0.1 };
       observer = new IntersectionObserver((entries) => {
@@ -38,7 +36,6 @@ export default function Home() {
           }
         });
       }, observerOptions);
-
       document.querySelectorAll('.reveal').forEach((el) => observer?.observe(el));
     }, 100);
 
@@ -59,20 +56,14 @@ export default function Home() {
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h1 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h1>
-          
           <div className="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
             <a href="#" className="hover:text-[#D17842] transition-colors">About us</a>
           </div>
-
           <div className="flex items-center gap-3">
             <button className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest">
               Login
             </button>
-            {/* CAMBIO AQUÍ: Convertimos el botón en un componente Link que apunta a /register */}
-            <Link 
-              href="/register" 
-              className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
-            >
+            <Link href="/register" className="px-6 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center">
               Sign Up
             </Link>
           </div>
@@ -161,106 +152,26 @@ export default function Home() {
             <p className="text-[#D17842] tracking-[0.3em] font-bold text-[10px] uppercase">Curated Selections</p>
             <h2 className="text-4xl md:text-5xl font-serif text-slate-900">Featured Journeys</h2>
           </div>
-          <button className="text-xs font-bold text-slate-400 hover:text-[#D17842] transition-colors border-b border-slate-200 pb-2 uppercase tracking-widest">
-            View All
-          </button>
         </div>
 
         <div className="grid md:grid-cols-3 gap-12">
           {[
-            { 
-              loc: "SUCHITOTO", 
-              price: "$45", 
-              title: "Secrets of Atol Chuco", 
-              rating: "4.9", 
-              img: "https://tse4.mm.bing.net/th/id/OIP.2toWbnT2DyxyOmhpgq3wVgFJC9?r=0&rs=1&pid=ImgDetMain&o=7&rm=3",
-              desc: "Deep in the markets, learn the ancient fermentation of black corn. Serve this ritualistic drink in traditional 'morro' husks with salty beans and alhuashte powder."
-            },
-            { 
-              loc: "CULTURAL IMMERSION", 
-              price: "$45", 
-              title: "Rhythms & Folklore", 
-              rating: "5.0", 
-              img: "https://www.honduras.com/wp-content/uploads/2021/05/folk-2.jpg",
-              desc: "Experience the vibrant 'Danza de los Historiantes'. Learn the steps of Salvadoran folk dances and the storytelling behind the colorful handmade costumes."
-            },
-            { 
-              loc: "ILOBASCO", 
-              price: "$65", 
-              title: "The Art of Miniatures", 
-              rating: "4.8", 
-              img: "https://programasaberfazer.gov.pt/_next/image?url=https:%2F%2Fprogramasaberfazer.gov.pt%2Fuploads%2F20230529_Olaria_Xico_Tarefa_163312_0046_2d5e09fd21.jpg&w=750&q=70",
-              desc: "Join a master potter to shape volcanic clay into world-famous 'sorpresas'. A journey through generational techniques of miniature ceramic sculpting."
-            }
+            { loc: "SUCHITOTO", price: "$45", title: "Secrets of Atol Chuco", rating: "4.9", img: "https://tse4.mm.bing.net/th/id/OIP.2toWbnT2DyxyOmhpgq3wVgFJC9?r=0&rs=1&pid=ImgDetMain&o=7&rm=3", desc: "Deep in the markets, learn the ancient fermentation of black corn." },
+            { loc: "CULTURAL IMMERSION", price: "$45", title: "Rhythms & Folklore", rating: "5.0", img: "https://www.honduras.com/wp-content/uploads/2021/05/folk-2.jpg", desc: "Experience the vibrant 'Danza de los Historiantes'." },
+            { loc: "ILOBASCO", price: "$65", title: "The Art of Miniatures", rating: "4.8", img: "https://programasaberfazer.gov.pt/_next/image?url=https:%2F%2Fprogramasaberfazer.gov.pt%2Fuploads%2F20230529_Olaria_Xico_Tarefa_163312_0046_2d5e09fd21.jpg&w=750&q=70", desc: "Join a master potter to shape volcanic clay into world-famous 'sorpresas'." }
           ].map((item, idx) => (
             <div key={idx} className="group">
               <div className="relative aspect-[4/5] overflow-hidden rounded-2xl mb-8 shadow-sm">
                 <img src={item.img} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" alt={item.title} />
-                <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full text-[10px] font-bold flex items-center gap-1">
-                  <span className="text-[#D17842]">★</span> {item.rating}
-                </div>
               </div>
-              <div className="flex justify-between items-center mb-3">
-                <p className="text-[10px] font-black tracking-[0.2em] text-[#D17842] uppercase">{item.loc}</p>
-                <p className="text-sm font-serif font-bold text-slate-900">{item.price}<span className="text-[10px] text-slate-400 font-sans ml-1">/ pers</span></p>
-              </div>
-              <h3 className="text-2xl font-serif text-slate-900 mb-4 group-hover:text-[#D17842] transition-colors">{item.title}</h3>
-              <p className="text-sm text-slate-500 leading-relaxed mb-6 line-clamp-3">{item.desc}</p>
-              <button className="text-[10px] font-bold tracking-[0.2em] uppercase border-b border-slate-200 hover:border-slate-900 pb-1 transition-all">Details</button>
+              <h3 className="text-2xl font-serif text-slate-900 mb-4">{item.title}</h3>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 6. CTA SECTION */}
-      <section className="bg-[#D17842] py-32 text-center px-10 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
-        <div className="max-w-4xl mx-auto space-y-10">
-          <h2 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">Ready to see the unseen?</h2>
-          <p className="text-white/80 text-xl max-w-2xl mx-auto leading-relaxed font-light">
-            Join us in redefining travel through intentional connection and the preservation of culture.
-          </p>
-          <div className="flex justify-center pt-6">
-            <button className="bg-white text-[#D17842] px-12 py-5 rounded-xl font-bold text-xs tracking-widest uppercase shadow-2xl hover:bg-slate-50 transition-all transform hover:-translate-y-1">
-              Start your journey
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. FOOTER */}
-      <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
-          <div className="space-y-8">
-            <h3 className="text-3xl font-bold text-[#D17842] tracking-tighter italic">Loqalli</h3>
-            <p className="text-slate-400 text-sm leading-relaxed">Crafting connections across the artisanal landscape of El Salvador.</p>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Resources</h4>
-            <ul className="space-y-4 text-sm text-slate-500 font-medium">
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Host an Experience</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Safety & Standards</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Help Center</a></li>
-            </ul>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Legal</h4>
-            <ul className="space-y-4 text-sm text-slate-500 font-medium">
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Privacy Policy</a></li>
-            </ul>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Newsletter</h4>
-            <div className="flex border-b border-slate-200 pb-3 group-focus-within:border-[#D17842] transition-colors">
-              <input type="email" placeholder="Your email address" className="bg-transparent outline-none text-sm flex-1 text-slate-600 italic" />
-              <button className="text-[#D17842] hover:translate-x-1 transition-transform"><Send size={18} /></button>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto pt-8 border-t border-slate-50 text-center text-[9px] text-slate-400 font-bold tracking-[0.4em] uppercase">
-          © 2026 Loqalli — Preserving Culture Through Micro-Experiences
-        </div>
-      </footer>
+      <Footer />
+      
     </main>
   );
 }

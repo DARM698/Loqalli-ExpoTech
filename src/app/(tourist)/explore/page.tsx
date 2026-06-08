@@ -5,7 +5,8 @@ import { jwtVerify } from 'jose';
 import ExperienceCard from '@/components/experiences/cardExperience';
 import ExploreFilters from '@/components/experiences/sortExperience';
 import NavbarUser from '@/components/shared/navbar';
-
+import Footer from '@/components/Footer/Footer';
+ 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
 );
@@ -92,6 +93,7 @@ export default async function HomePage({ searchParams }: PageProps) {
           </div>
         )}
       </main>
+       <Footer />
     </div>
   );
 }

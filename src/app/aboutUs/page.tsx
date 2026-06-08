@@ -1,15 +1,12 @@
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 import NavbarUser from '@/components/shared/navbar'; // Asegúrate de que esta ruta sea la correcta
-import Link from 'next/link';
-import Image from 'next/image';
 
 const JWT_SECRET = new TextEncoder().encode(
   process.env.JWT_SECRET || 'un_secret_muy_largo_y_seguro_de_mas_de_32_caracteres'
 );
 
 export default async function AboutPage() {
-  // Lógica para obtener el usuario actual desde la cookie
   const cookieStore = await cookies();
   const token = cookieStore.get('session_token')?.value;
   let userSession = { role: 'TOURIST' as 'TOURIST' | 'HOST', id: '' };
@@ -32,13 +29,13 @@ export default async function AboutPage() {
       <NavbarUser role={userSession.role} userId={userSession.id} />
 
       <section
-        className="relative h-[500px] flex items-center justify-center text-center"
-        style={{
+         className="relative h-[500px] flex items-center justify-center text-center"
+          style={{
           backgroundImage:
-            "url('https://img.freepik.com/foto-gratis/hermosos-artesanos-sentados-banco-rueda-alfarero-haciendo-vasijas-barro-productos-hechos-mano_257488-4022.jpg')",
+          "url('/FotoAboutUs.jpeg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
-        }}
+  }}
       >
         {/* Overlay*/}
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20"></div>
@@ -117,6 +114,26 @@ export default async function AboutPage() {
 
           <img 
             src="https://i.ytimg.com/vi/6D3JLA5dX0I/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGHIgTyg-MA8=&rs=AOn4CLCc1_oLx17lW38tLOe4ixz8jmDzsw"
+            alt="Artisan hands"
+          />
+
+        </div>
+      </section>
+
+      <section className="py-16 px-10 bg-gray-100">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-10 items-center">
+
+          <div>
+            <h2 className="text-3xl font-serif font-semibold text-[#D17842] mb-4">
+              Our Name, Our Identity
+            </h2>
+            <p className="text-gray-800 font-sans text-2x1">
+              It is a blend of words. We combined the word "Loc," which means local, and "Qalli," derived from "Qualli," a Nahuatl word that means "the good of." Together, this combination reflects what our platform is all about: the good of the local.
+            </p>
+          </div>
+
+         <img 
+            src="/LoqalliLogo.jpeg"
             alt="Artisan hands"
           />
 

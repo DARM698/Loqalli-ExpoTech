@@ -63,13 +63,9 @@ export default function Home() {
             <Image src="/logo1.png" alt="Logo" width={150} height={150} />
           </div>
 
-          <div className="hidden lg:flex gap-10 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-            <Link href="/aboutUs" className="hover:text-[#DA653B] transition-colors"> About us </Link>
-          </div>
-
           <div className="flex items-center gap-3">
             <Link 
-              href="/register" 
+              href="/Login" 
               className="px-3 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
             >
               Log in

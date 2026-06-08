@@ -1,32 +1,53 @@
-'use client'
- 
+'use client'; 
 import Link from 'next/link';
-import Image from 'next/image';
+// Importamos tu Navbar personalizado
+import NavbarLogin from '@/components/navbarlogin';
 
-export default function Login(){
+export default function RegisterWelcomePage() {
+  return (
+    <main className="min-h-screen bg-white text-slate-800 font-sans selection:bg-[#D17842] selection:text-white flex flex-col justify-between">
+      
+      <NavbarLogin/>
 
- return(
-        <>
-        <nav className={`fixed w-full z-50 transition-all  top-4 duration-500 px-6 md:px-10'py-4 bg-white/90 backdrop-blur-md shadow-sm' : 'py-8 bg-transparent'}`}>
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/">
-       <Image src="/logo1.png" alt="Logo" width={150} height={150} className="w-16 md:w-38" />
-      </Link>
+      <div className="my-auto pt-32 flex w-full max-w-md flex-col items-center space-y-10 text-center mx-auto px-6">
+        
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D17842]/10 text-[#D17842] font-bold text-[10px] tracking-[0.2em] uppercase">
+          Join our community
         </div>
 
-    <div className="bg-white h-screen flex items-center justify-center text-black">
-        <div className=" p-6 shadow-2xl text-black rouded-full border-solid">
-            <h1 className="text-[#DA653B] text-6xl font-serif p-2 mb-10">Welcome to Loqalli</h1>
-            <p className="text-[#56423D] text-xl mb-10">How would you like to sign up, as a tourist or host?</p>
-            <div className="flex flex-col gap-4" >
-                <button className=" text-[#6B7280] font-medium items-center justify-center bg-[#F1EBE0] rounded-lg w-full p-2 "> Tourist</button>
-                <button className=" text-[#6B7280] font-medium gitems-center justify-center bg-[#F1EBE0] rounded-lg w-full p-2">Host</button>
-            </div>
-            <h5 className="mt-10 flex items-center justify-center">Do not you have an account?</h5>
-            <h1 className="text-[#DA653B] mt-5 flex items-center cursor-pointer justify-center">Log in</h1>
+        {/* Título Principal */}
+        <h1 className="text-4xl font-serif font-medium text-slate-900 md:text-5xl leading-tight">
+          Welcome to <span className="italic text-[#D17842]">Loqalli</span>
+        </h1>
+
+        {/* Subtítulo */}
+        <p className="text-sm md:text-base text-slate-500 leading-relaxed max-w-sm">
+          How would you like to log in, as a tourist or a host?
+        </p>
+        <div className="w-full space-y-4 pt-2">
+          <Link 
+            href="/Login/login-tourist" 
+            className="flex w-full items-center justify-center rounded-full bg-slate-50/50 py-4 text-xs font-bold uppercase tracking-widest text-slate-700 transition-all hover:bg-[#D2693E] hover:text-white hover:border-slate-900 hover:shadow-lg transform active:scale-[0.98]"
+          >
+            Tourist
+          </Link>
+          
+          <Link 
+            href="/Login/login-host" 
+            className="flex w-full items-center justify-center rounded-full bg-slate-50/50 py-4 text-xs font-bold uppercase tracking-widest text-slate-700 transition-all hover:bg-[#D2693E] hover:text-white hover:border-slate-900 hover:shadow-lg transform active:scale-[0.98]"
+          >
+            Host
+          </Link>
         </div>
-    </div>
-    </nav>
-    </>
-    )
+      </div>
+
+      {/* 3. FOOTER / ACCESO A LOGIN */}
+      <div className="flex flex-col items-center space-y-1 pb-10 text-xs tracking-wider uppercase font-bold text-slate-400">
+        <Link 
+          href="/login" 
+          className="text-[#D17842] hover:text-[#b05e30] transition-colors underline underline-offset-4"> Log in
+        </Link>
+      </div>
+    </main>
+  );
 }

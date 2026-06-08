@@ -4,6 +4,7 @@ import Image from "next/image"
 import NavbarLogin from "@/components/navbarlogin"
 import { useRouter } from "next/navigation"
 import { Eye, EyeOff } from "lucide-react"
+import Link from "next/link"
  
 export default function Host() {
 const router = useRouter();
@@ -51,7 +52,7 @@ return (
   <>
     <NavbarLogin/>
  
-    <div className="bg-white min-h-screen flex items-center justify-center overflow-hidden text-black">
+    <div className="bg-white min-h-screen flex items-center justify-center overflow-hidden text-black pt-16">
       <div className="w-full max-w-2xl h-[540px] bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
  
         <div className="hidden md:flex relative">
@@ -62,7 +63,7 @@ return (
           </div>
         </div>
  
-        <form onSubmit={handleSubmit} className="text-black flex flex-col justify-center px-5 py-3">
+        <form onSubmit={handleSubmit} className="text-black flex flex-col justify-center px-5 py-3 m-5">
           <h1 className="text-[#2D362E] text-3xl font-serif mb-5">Welcome Back</h1>
           <p className="text-[#56423D] text-base mb-4">Sign in to your account to continue your journey.</p>
  
@@ -121,7 +122,9 @@ return (
  
             <p className="text-center mt-5 text-[#56423D] text-base">
               New to loqalli?{" "}
-              <span className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">Sign up</span>
+            <Link href="/register/host" className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">
+              Sign up
+            </Link>
             </p>
           </div>
         </form>

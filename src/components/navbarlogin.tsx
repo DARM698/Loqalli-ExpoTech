@@ -21,12 +21,6 @@ export default function NavbarLogin() {
             </Link>
           </div>
  
-          <div className="hidden md:flex gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
-            <Link href="/aboutUs" className="hover:text-[#DA653B] transition-colors">
-              About us
-            </Link>
-          </div>
- 
           <div className="flex items-center gap-3">
             <Link href={signUpHref} className="px-4 py-2 text-[10px] font-bold text-[#56423D] hover:text-[#DA653B] transition-colors uppercase tracking-widest">
               Log in

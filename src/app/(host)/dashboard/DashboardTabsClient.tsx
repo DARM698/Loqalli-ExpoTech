@@ -10,9 +10,9 @@ import {
   Users, 
   CheckCircle, 
   AlertCircle, 
-  MessageSquare, 
   ChevronRight,
-  CreditCard 
+  CreditCard,
+  MessageSquare
 } from "lucide-react";
 
 interface NavbarUserProps {
@@ -85,8 +85,12 @@ export default function DashboardTabsClient({
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const activeBookings = bookings.filter((b) => b.status === "PENDING" || b.status === "CONFIRMED");
-  const finishedBookings = bookings.filter((b) => b.status !== "PENDING" && b.status !== "CONFIRMED");
+  // Fecha actual de control (Hoy es 7 de Junio de 2026)
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // FILTRO AUTOMÁTICO: Las reservas pasadas van directamente a "Finalizadas"
+  const activeBookings = bookings.filter((b) => b.date >= todayStr);
+  const finishedBookings = bookings.filter((b) => b.date < todayStr);
 
   const handleConfirm = (id: string, touristName: string) => {
     startTransition(async () => {
@@ -202,7 +206,7 @@ export default function DashboardTabsClient({
                         </div>
                       </div>
                       {booking?.status === "PENDING" && (
-                        <button onClick={() => handleConfirm(booking?.id, booking?.tourist?.fullName)} disabled={isPending} className="flex-1 py-2 font-medium text-sm rounded transition bg-[#D96B43] text-white hover:bg-[#c55d37] flex items-center justify-center gap-2">
+                        <button onClick={() => handleConfirm(booking?.id, booking?.tourist?.fullName)} disabled={isPending} className="w-full py-2 font-medium text-sm rounded transition bg-[#D96B43] text-white hover:bg-[#c55d37] flex items-center justify-center gap-2">
                           {isPending ? "Processing..." : <><CheckCircle size={16} /> Confirm</>}
                         </button>
                       )}
@@ -222,14 +226,59 @@ export default function DashboardTabsClient({
           </div>
         ) : (
           <div className="space-y-10">
-            <h2 className="text-2xl font-serif font-medium text-gray-900 mb-6">Completed Visits</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {finishedBookings.map((booking) => (
-                <div key={booking?.id} className="border border-gray-100 rounded-lg p-6 bg-gray-50 opacity-80">
-                  <h3 className="font-bold text-gray-900">{booking?.tourist?.fullName}</h3>
-                  <p className="text-xs text-gray-500 mb-4">{booking?.experience?.title}</p>
+            <div>
+              <h2 className="text-2xl font-serif font-medium text-gray-900 mb-6">Completed Visits</h2>
+              {finishedBookings.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {finishedBookings.map((booking) => (
+                    <div key={booking?.id} className="border border-gray-200 rounded-lg p-6 bg-gray-50/70 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600">
+                            {getInitials(booking?.tourist?.fullName)}
+                          </div>
+                          <div>
+                            <h3 className="font-sans font-bold text-gray-800 text-lg leading-tight">{booking?.tourist?.fullName}</h3>
+                            <p className="text-xs text-gray-400 mt-0.5">{booking?.experience?.title}</p>
+                          </div>
+                        </div>
+                        <div className="text-sm text-gray-400 space-y-1">
+                          <p>📅 Date completed: {booking?.date}</p>
+                          <p>👤 Group size: {booking?.guests} people</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : (
+                <div className="p-6 bg-gray-50 border border-gray-100 text-center text-gray-400 text-sm rounded-lg">
+                  No completed experiences found prior to today's date.
+                </div>
+              )}
+            </div>
+
+            {/* INTEGRACIÓN DE REVIEWS DE MÓNICA */}
+            <div className="border-t border-gray-100 pt-8">
+              <h2 className="text-2xl font-serif font-medium text-gray-900 mb-2 flex items-center gap-2">
+                <MessageSquare size={22} className="text-[#D96B43]" /> What people say about you
+              </h2>
+              <p className="text-sm text-gray-400 mb-6 font-sans">Opinions collected from your finished tours.</p>
+              
+              {reviews.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {reviews.map((rev) => (
+                    <div key={rev?.id} className="border border-gray-100 rounded-2xl p-6 bg-[#FCFAF6] shadow-sm space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-gray-800 text-sm">{rev?.author?.fullName || "Anonymous"}</span>
+                        <span className="text-[#D96B43] text-xs">{"★".repeat(rev?.rating || 5)}</span>
+                      </div>
+                      <p className="text-gray-600 italic text-sm font-serif">"{rev?.comment || ""}"</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400 italic text-sm font-serif">No reviews available yet.</p>
+              )}
             </div>
           </div>
         )}

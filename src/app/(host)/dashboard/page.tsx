@@ -3,6 +3,8 @@ import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { prisma } from "@/lib/prisma";
 import DashboardTabsClient from "./DashboardTabsClient";
+// Importamos los tipos necesarios de Prisma para el autocompletado y validación
+import { Booking, User, Experience, Review } from "@prisma/client";
 
 export default async function DashboardHostPage() {
   // 1. Obtener el token de la cookie
@@ -49,7 +51,8 @@ export default async function DashboardHostPage() {
     },
   });
 
-  const safeBookings = bookings.map((b) => ({
+  // Tipamos 'b' combinando el modelo Booking con sus relaciones correspondientes
+  const safeBookings = bookings.map((b: Booking & { User: User; Experience: Experience }) => ({
     id: b.id,
     date: b.date,
     time: b.time,
@@ -61,7 +64,8 @@ export default async function DashboardHostPage() {
     },
   }));
 
-  const safeReviews = reviews.map((r) => ({
+  // Tipamos 'r' combinando el modelo Review con el autor de la reseña por si acaso
+  const safeReviews = reviews.map((r: Review & { author: User }) => ({
     id: r.id,
     rating: r.rating,
     comment: r.comment || "",
@@ -70,6 +74,7 @@ export default async function DashboardHostPage() {
 
   const totalBookings = safeBookings.length;
   const totalGuests = safeBookings.reduce((sum, b) => sum + b.guests, 0);
+
   return (
     <DashboardTabsClient
       bookings={safeBookings}

@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 import Link from 'next/link';
 import ExperienceActions from '@/components/experiences/ExperiencesActions';
 import ProfileImageUploader from '@/components/ProfileImageUploader';
-import NavbarUser from '@/components/shared/navbar'; // Importa tu Navbar
+import NavbarUser from '@/components/shared/navbar';
 
 interface ProfilePageProps {
   params: Promise<{ id: string }>;
@@ -56,7 +56,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <main className="bg-[#f8f6f3] min-h-screen text-slate-800 pb-20">
-      {/* Navbar insertado aquí */}
       <NavbarUser role={currentUser.role} userId={currentUser.id} />
 
       {/* HERO */}
@@ -64,17 +63,26 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
         <div className="relative h-[420px] rounded-3xl overflow-hidden bg-cover bg-center"
           style={{ backgroundImage: "url('https://tv.joycemeyer.org/espanol/wp-content/uploads/sites/3/2021/12/2115-768x448.jpg')" }}>
           <div className="absolute inset-0 bg-black/20"></div>
+          
           <div className="absolute bottom-8 left-8 flex items-end gap-6">
+            {/* CONTENEDOR DE IMAGEN RESPONSIVE Y CIRCULAR */}
             <div className="relative">
-              <img 
-                src={user.profileImage || "/avatar.png"} 
-                alt={user.fullName} 
-                className="w-40 h-40 rounded-full border-4 border-white object-cover shadow-xl" 
-              />
-              {isOwner && <ProfileImageUploader userId={user.id} />}
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-white shadow-xl">
+                <img 
+                  src={user.profileImage || "/avatar.png"} 
+                  alt={user.fullName} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              {isOwner && (
+                <div className="absolute bottom-0 right-0">
+                  <ProfileImageUploader userId={user.id} />
+                </div>
+              )}
             </div>
-            <div className="text-white">
-              <h2 className="text-5xl font-bold font-serif">{user.fullName}</h2>
+
+            <div className="text-white mb-2">
+              <h2 className="text-2xl font-bold font-serif">{user.fullName}</h2>
               <p className="mt-2 text-lg uppercase tracking-wider text-sm opacity-90">{user.role}</p>
             </div>
           </div>

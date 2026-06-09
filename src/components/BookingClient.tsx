@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import BookingCalendar from '@/components/experiences/BookingCalendar';
@@ -9,7 +9,24 @@ export default function BookingClient({ experience }: { experience: any }) {
   const [guests, setGuests] = useState(1);
   const [selectedDate, setSelectedDate] = useState<Date>();
   
-  // Cálculo simple del subtotal
+  // 1. Cálculo dinámico de cupos disponibles en el cliente para UI
+  const spotsLeft = useMemo(() => {
+    if (!selectedDate) return 0;
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    
+    // Suma los invitados de las reservas existentes para esta fecha específica
+    const bookedForDate = experience.Booking?.reduce((acc: number, b: any) => {
+      return b.date === dateStr ? acc + b.guests : acc;
+    }, 0) || 0;
+    
+    return experience.maxParticipants - bookedForDate;
+  }, [selectedDate, experience.Booking, experience.maxParticipants]);
+
+  // 2. Validación de estado para el botón
+  const isAvailable = selectedDate && spotsLeft > 0;
+  const isOverCapacity = guests > spotsLeft;
+  const canProceed = isAvailable && !isOverCapacity;
+
   const subtotal = experience.pricePerPerson * guests;
 
   return (
@@ -17,21 +34,27 @@ export default function BookingClient({ experience }: { experience: any }) {
       <h1 className="text-4xl font-serif font-bold mb-8">Book {experience.title}</h1>
 
       <div className="grid md:grid-cols-2 gap-12">
-        {/* Selector de Calendario y Personas */}
         <section>
           <BookingCalendar 
             experienceId={experience.id}
             maxParticipants={experience.maxParticipants}
-            bookings={experience.Booking || []} // Aseguramos que no sea undefined
-            availableDays={experience.days || []} // Recibe el arreglo ['2026-06-04', ...]
+            bookings={experience.Booking || []}
+            availableDays={experience.days || []}
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             guests={guests}
-            onGuestsChange={setGuests}
+            onGuestsChange={(newGuests) => {
+                // Aseguramos que el input del calendario respete el límite de spotsLeft
+                setGuests(Math.min(newGuests, spotsLeft));
+            }}
           />
+          {selectedDate && (
+            <p className={`mt-2 text-sm font-semibold ${spotsLeft === 0 ? 'text-red-500' : 'text-green-600'}`}>
+              {spotsLeft === 0 ? "Sold out for this date" : `${spotsLeft} spots available`}
+            </p>
+          )}
         </section>
 
-        {/* Resumen del Precio (Interactivo) */}
         <aside className="bg-[#F3D9CF]/10 p-8 rounded-2xl border border-[#F3D9CF] h-fit">
           <h2 className="text-xl font-bold mb-6">Price Summary</h2>
           
@@ -48,14 +71,14 @@ export default function BookingClient({ experience }: { experience: any }) {
 
           <button 
             onClick={() => {
-              if (!selectedDate) return;
+              if (!selectedDate || !canProceed) return;
               const dateStr = format(selectedDate, "yyyy-MM-dd");
               router.push(`/checkout/${experience.id}?date=${dateStr}&guests=${guests}`);
             }}
-            disabled={!selectedDate}
-            className="w-full mt-8 bg-[#D2693E] text-white py-4 rounded-xl font-bold hover:bg-[#b05832] transition disabled:opacity-50"
+            disabled={!canProceed}
+            className="w-full mt-8 bg-[#D2693E] text-white py-4 rounded-xl font-bold hover:bg-[#b05832] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Continue to Checkout
+            {!selectedDate ? "Select a date" : isOverCapacity ? "Not enough spots" : "Continue to Checkout"}
           </button>
         </aside>
       </div>

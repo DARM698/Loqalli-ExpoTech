@@ -2,7 +2,6 @@
 
 import React, { useState, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
 import { confirmBooking } from "@/app/actions";
 import { 
   Calendar, 
@@ -10,58 +9,14 @@ import {
   Users, 
   CheckCircle, 
   AlertCircle, 
-  MessageSquare, 
   ChevronRight,
   CreditCard 
 } from "lucide-react";
 
-interface NavbarUserProps {
-  role: 'TOURIST' | 'HOST';
-  userId: string;
-}
+// Importamos el componente Navbar desde tu archivo externo
+import NavbarUser from "@/components/shared/navbar"; 
 
-function NavbarUser({ role, userId }: NavbarUserProps) {
-  const pathname = usePathname();
-  const isTourist = role === 'TOURIST';
-  const profileHref = `/profile/${userId}`;
-
-  const navLinks = isTourist
-    ? [
-        { name: 'Explore', href: '/explore' },
-        { name: 'About us', href: '/aboutUs' },
-        { name: 'Profile', href: profileHref },
-      ]
-    : [
-        { name: 'Explore', href: '/explore' },
-        { name: 'Create Experience', href: '/uploadMicroexperiences' },
-        { name: 'Agenda / Calendar', href: '/dashboard' },
-        { name: 'Profile', href: profileHref },
-      ];
-
-  return (
-    <nav className="w-full bg-white border-b border-[#F3D9CF] px-6 py-4 flex items-center justify-between sticky top-0 z-[100]">
-      <div className="flex items-center gap-12">
-        <Link href={isTourist ? "/explore" : "/host"} className="text-2xl font-serif font-bold text-[#D2693E]">
-          Loqalli
-        </Link>
-        <div className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              href={link.href}
-              className={`text-sm font-medium transition-colors hover:text-[#D2693E] ${
-                pathname === link.href ? 'text-[#D2693E]' : 'text-[#4A3933]/70'
-              }`}
-            >
-              {link.name}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </nav>
-  );
-}
-
+// --- Dashboard Component ---
 interface DashboardTabsClientProps {
   bookings: any[];
   reviews: any[];
@@ -118,6 +73,7 @@ export default function DashboardTabsClient({
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Navbar importado */}
       <NavbarUser role={role} userId={userId} />
 
       <div className="max-w-6xl mx-auto p-6 md:p-12">

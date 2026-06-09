@@ -14,6 +14,7 @@ export default function CheckoutClient({ experience, userId }: { experience: any
   const guests = parseInt(searchParams.get("guests") || "1");
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(""); // Estado para manejar mensajes de error
 
   const [bankData, setBankData] = useState({
     accountHolder: "",
@@ -31,6 +32,15 @@ export default function CheckoutClient({ experience, userId }: { experience: any
   const cashToHost = subtotal - commission;
 
   const handleReservation = async () => {
+    // Limpiar errores previos
+    setError("");
+
+    // Validación: Verificar que los campos bancarios no estén vacíos
+    if (Object.values(bankData).some((val) => val.trim() === "")) {
+      setError("Por favor, completa todos los campos de información bancaria.");
+      return;
+    }
+
     setLoading(true);
     try {
       const booking = await createBooking({
@@ -44,7 +54,7 @@ export default function CheckoutClient({ experience, userId }: { experience: any
       router.push(`/pagoexitoso?bookingId=${booking.id}`);
 
     } catch (error: any) {
-      alert("Error: " + error.message);
+      setError("Error: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -57,6 +67,13 @@ export default function CheckoutClient({ experience, userId }: { experience: any
       <main className="min-h-screen bg-[#FFFFFF] px-10 py-10 text-[#2E2A27]">
         <section className="max-w-7xl mx-auto">
           <h1 className="text-5xl font-serif mb-10">Finalize reservation</h1>
+
+          {/* Mensaje de error si falta llenar algún campo */}
+          {error && (
+            <div className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 font-medium border border-red-200">
+              {error}
+            </div>
+          )}
 
           <div className="grid md:grid-cols-3 gap-8">
             {/* COLUMNA IZQUIERDA */}

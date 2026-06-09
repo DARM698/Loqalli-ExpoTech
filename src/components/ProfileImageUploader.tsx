@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Edit2 } from 'lucide-react';
-import { uploadProfileImageDirectly } from '@/app/actions'; // Importamos la nueva función
+import { uploadProfileImageDirectly } from '@/app/actions';
 
 export default function ProfileImageUploader({ userId }: { userId: string }) {
   const [uploading, setUploading] = useState(false);
@@ -14,11 +14,9 @@ export default function ProfileImageUploader({ userId }: { userId: string }) {
     setUploading(true);
 
     try {
-      // Preparamos el FormData para la Server Action
       const formData = new FormData();
       formData.append('file', file);
 
-      // Llamada directa a la Server Action
       const result = await uploadProfileImageDirectly(userId, formData);
 
       if (result?.error) {
@@ -26,7 +24,7 @@ export default function ProfileImageUploader({ userId }: { userId: string }) {
       }
       
       alert("¡Foto de perfil actualizada!");
-      window.location.reload(); // Recargamos para ver el cambio
+      window.location.reload(); 
     } catch (error) {
       console.error(error);
       alert("Hubo un error al subir la imagen.");
@@ -36,12 +34,13 @@ export default function ProfileImageUploader({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="absolute bottom-0 right-0">
-      <label className="bg-[#D17842] hover:bg-[#b86532] text-white p-2 rounded-full cursor-pointer shadow-lg transition-all flex items-center justify-center">
+    // Ajuste de posición: el botón se escala ligeramente según el dispositivo
+    <div className="absolute bottom-1 right-1 md:bottom-2 md:right-2">
+      <label className="bg-[#D17842] hover:bg-[#b86532] text-white p-2 md:p-3 rounded-full cursor-pointer shadow-lg transition-all flex items-center justify-center aspect-square">
         {uploading ? (
           <span className="animate-spin text-sm">↻</span>
         ) : (
-          <Edit2 size={16} />
+          <Edit2 size={16} className="md:w-5 md:h-5" />
         )}
         <input 
           type="file" 

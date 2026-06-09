@@ -12,8 +12,8 @@ export default function NavbarLogin() {
  
   return (
     <nav className="fixed w-full z-50 top-0 left-0 border-b border-[#F1EBE0] bg-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-18">
+      <div className="w-full px-8">
+        <div className="flex justify-between items-center h-16.5">
  
           <div className="flex-shrink-0">
             <Link href="/">
@@ -22,14 +22,13 @@ export default function NavbarLogin() {
           </div>
  
           <div className="flex items-center gap-3">
-            <Link href={signUpHref} className="px-4 py-2 text-[10px] font-bold text-[#56423D] hover:text-[#DA653B] transition-colors uppercase tracking-widest">
+            <Link href={loginHref} className="px-4 py-2 text-[10px] font-bold text-[#56423D] hover:text-[#DA653B] transition-colors uppercase tracking-widest">
               Log in
             </Link>
-            <Link href={loginHref} className="px-5 py-2 text-[10px] font-bold text-white bg-[#DA653B] rounded-full hover:shadow-lg transition-all active:scale-95 uppercase tracking-widest">
+            <Link href={signUpHref} className="px-5 py-2 text-[10px] font-bold text-white bg-[#DA653B] rounded-full hover:shadow-lg transition-all active:scale-95 uppercase tracking-widest">
               Sign Up
             </Link>
           </div>
- 
         </div>
       </div>
     </nav>

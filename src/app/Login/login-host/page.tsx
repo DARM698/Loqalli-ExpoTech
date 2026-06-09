@@ -2,57 +2,70 @@
 import { useState } from "react"
 import Image from "next/image"
 import NavbarLogin from "@/components/navbarlogin"
-import { useRouter } from "next/navigation"
+import { useRouter } from "next/navigation" 
 import { Eye, EyeOff } from "lucide-react"
+import { usePathname } from "next/navigation"
 import Link from "next/link"
+
+
+export default function Tourist() {
+const pathname = usePathname();
  
-export default function Host() {
-const router = useRouter();
- 
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
-const [loading, setLoading] = useState(false);
-const [showPassword, setShowPassword] = useState(false);
- 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!email || !password) return alert("Por favor llena todos los campos.");
- 
-  setLoading(true);
-  try {
-   const res = await fetch('/api/registro/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password })
-   });
- 
-   const data = await res.json();
- 
-   if (res.ok && data.success) {
-    if (data.user.role !== 'HOST') {
-     alert("Esta cuenta no está registrada como Host. Por favor ve al login de Turistas.");
-     setLoading(false);
-     return;
-    }
- 
-    alert(`¡Bienvenido de vuelta, ${data.user.fullName}!`);
-    router.push('/uploadMicroexperiences');
-   } else {
-    alert(data.error || "Error al iniciar sesión.");
-   }
-  } catch (error) {
-   console.error(error);
-   alert("Error de conexión con el servidor.");
-  } finally {
-   setLoading(false);
-  }
-};
- 
+  const isHostRoute = pathname.includes('host');
+  const loginHref = isHostRoute ? "/Login/login-host" : "/Login/login-tourist";
+  const signUpHref = isHostRoute ? "/register/host" : "/register/turista";
+  
+
+    const router = useRouter(); 
+    
+    // --- LÓGICA DE CONTROL ---
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!email || !password) return alert("Por favor llena todos los campos.");
+
+        setLoading(true);
+        try {
+            const res = await fetch('/api/registro/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                // Verificar que sea TURIST
+                if (data.user.role !== 'TOURIST') {
+                    alert("Esta cuenta está registrada como Host. Por favor ve al login de Hosts.");
+                    setLoading(false);
+                    return;
+                }
+                
+                alert(`¡Bienvenido de vuelta, ${data.user.fullName}!`);
+                
+                // REDIRECCIÓN ACTUALIZADA A EXPLORE
+                router.push('/explore'); 
+            } else {
+                alert(data.error || "Error al iniciar sesión.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Error de conexión con el servidor.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
 return (
   <>
     <NavbarLogin/>
  
-    <div className="bg-white min-h-screen flex items-center justify-center overflow-hidden text-black pt-16">
+    <div className="bg-white h-screen flex items-center justify-center overflow-hidden text-black pt-24">
       <div className="w-full max-w-2xl h-[540px] bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
  
         <div className="hidden md:flex relative">
@@ -63,7 +76,7 @@ return (
           </div>
         </div>
  
-        <form onSubmit={handleSubmit} className="text-black flex flex-col justify-center px-5 py-3 m-5">
+        <form onSubmit={handleSubmit} className="text-black flex flex-col justify-center px-5 py-3">
           <h1 className="text-[#2D362E] text-3xl font-serif mb-5">Welcome Back</h1>
           <p className="text-[#56423D] text-base mb-4">Sign in to your account to continue your journey.</p>
  
@@ -73,7 +86,7 @@ return (
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full mb-3 p-2 text-center outline-none" required/>
+            className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full mb-3 p-2 text-center outline-none"required/>
  
           <div className="flex justify-between items-center">
             <label className="text-[#56423D] p-2">Password</label>
@@ -87,7 +100,7 @@ return (
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
               className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full p-2 text-center outline-none" required/>
-            
+
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -122,9 +135,9 @@ return (
  
             <p className="text-center mt-5 text-[#56423D] text-base">
               New to loqalli?{" "}
-            <Link href="/register/host" className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">
-              Sign up
-            </Link>
+              <Link href={signUpHref} className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">
+                <span className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">Sign up</span>
+              </Link>
             </p>
           </div>
         </form>

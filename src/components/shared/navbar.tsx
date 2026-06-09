@@ -67,8 +67,7 @@ export default function NavbarUser({ role, userId }: NavbarUserProps) {
         
         <button 
           onClick={handleSignOut} 
-          className="w-full md:w-auto px-3 py-1.5 text-[9px] md:text-[10px] font-bold text-white bg-[#DA653B] rounded-full hover:shadow-lg transition-all active:scale-95 uppercase tracking-widest"
-        > 
+          className="w-full md:w-auto px-3 py-1.5 text-[9px] md:text-[10px] font-bold text-white bg-[#DA653B] rounded-full hover:shadow-lg transition-all active:scale-95 uppercase tracking-widest"> 
           Sign out 
         </button>
       </div>

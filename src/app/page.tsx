@@ -55,7 +55,7 @@ export default function Home() {
       
       {/* 1. NAVEGACIÓN */}
       <nav className={`fixed w-full z-50 transition-all duration-500 px-2 md:px-5 ${
-        mounted && isScrolled ? 'py-2 bg-white shadow-sm' : 'py-2 bg-white  shadow-sm'
+        mounted && isScrolled ? 'py-2 bg-white shadow-sm' : 'py-2 bg-white  shadow-md'
       }`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           
@@ -73,14 +73,14 @@ export default function Home() {
             <Link 
               href="/register" 
               className="px-3 py-2.5 text-[10px] font-bold text-white bg-[#D17842] rounded-full hover:shadow-lg hover:brightness-110 transition-all transform hover:-translate-y-0.5 uppercase tracking-widest text-center"
-            >
+>
               Sign Up
             </Link>
           </div>
         </div>
       </nav>
 
-      {/* 2. HERO SECTION */}
+      
       <section className="relative pt-40 pb-20 px-10 max-w-7xl mx-auto grid lg:grid-cols-12 gap-16 items-center reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="lg:col-span-5 space-y-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D17842]/10 text-[#D17842] font-bold text-[10px] tracking-[0.2em] uppercase">
@@ -104,8 +104,7 @@ export default function Home() {
               key={idx}
               src={img} 
               className={`absolute inset-0 w-full h-full object-cover transition-all duration-[1.5s] ease-in-out ${idx === imgIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-110'}`}
-              alt="Salvadoran Culture"
-            />
+              alt="Salvadoran Culture"/>
           ))}
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-3 z-10 bg-black/20 backdrop-blur-md p-3 rounded-full">
             {images.map((_, idx) => (
@@ -115,7 +114,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. FEATURES */}
+      
       <section className="max-w-7xl mx-auto px-10 py-32 border-t border-slate-50 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="grid md:grid-cols-3 gap-16">
           {[
@@ -134,14 +133,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. SECCIÓN DE CITA */}
       <section className="grid md:grid-cols-2 bg-[#F5E6D3] min-h-[600px] reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="relative overflow-hidden">
           <img 
             src="https://images.unsplash.com/photo-1621846323386-a60faf26f962?blend=000000&blend-alpha=10&blend-mode=normal&blend-w=1&crop=faces%2Cedges&h=630&mark=https:%2F%2Fimages.unsplash.com%2Fopengraph%2Flogo.png&mark-align=top%2Cleft&mark-pad=50&mark-w=64&w=1200&auto=format&fit=crop&q=60&ixid=M3wxMjA3fDB8MXxhbGx8fHx8fHx8fHwxNzAzOTAzMDIwfA&ixlib=rb-4.0.3" 
             className="w-full h-full object-cover"
-            alt="Artisan hands"
-          />
+            alt="Artisan hands"/>
         </div>
         <div className="flex flex-col justify-center p-12 md:p-24 space-y-10">
           <span className="text-8xl text-[#D17842] font-serif leading-none opacity-40">&ldquo;</span>
@@ -155,7 +152,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 5. EXPERIENCIAS */}
+      
       <section className="max-w-7xl mx-auto px-10 py-32 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-6">
           <div className="space-y-4">
@@ -213,7 +210,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6. CTA SECTION */}
+     
       <section className="bg-[#D17842] py-32 text-center px-10 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-4xl mx-auto space-y-10">
           <h2 className="text-4xl md:text-6xl font-serif font-bold text-white leading-tight">Ready to see the unseen?</h2>
@@ -228,7 +225,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 7. FOOTER */}
+     
       <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
           <div className="space-y-8">

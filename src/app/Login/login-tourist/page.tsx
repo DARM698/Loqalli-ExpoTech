@@ -2,11 +2,19 @@
 import { useState } from "react"
 import Image from "next/image"
 import NavbarLogin from "@/components/navbarlogin"
-import { useRouter } from "next/navigation" // <-- Importado
+import { useRouter } from "next/navigation" 
 import { Eye, EyeOff } from "lucide-react"
+import { usePathname } from "next/navigation"
+import Link from "next/link"
 
 export default function Tourist() {
-    const router = useRouter(); // <-- Inicializado
+  const pathname = usePathname();
+ 
+  const isHostRoute = pathname.includes('host');
+  const loginHref = isHostRoute ? "/Login/login-host" : "/Login/login-tourist";
+  const signUpHref = isHostRoute ? "/register/host" : "/register/turista";
+
+    const router = useRouter(); 
     
     // --- LÓGICA DE CONTROL ---
     const [email, setEmail] = useState("");
@@ -76,9 +84,7 @@ return (
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="name@example.com"
-            className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full mb-3 p-2 text-center outline-none"
-            required
-          />
+            className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full mb-3 p-2 text-center outline-none"required/>
  
           <div className="flex justify-between items-center">
             <label className="text-[#56423D] p-2">Password</label>
@@ -91,9 +97,7 @@ return (
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
-              className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full p-2 text-center outline-none"
-              required
-            />
+              className="text-[#2D362E] border border-[#F1EBE0] rounded bg-[#F1EBE0] w-full p-2 text-center outline-none" required/>
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -111,8 +115,7 @@ return (
           <button
             type="submit"
             disabled={loading}
-            className="text-white border border-[#DA653B] rounded font-medium bg-[#DA653B] w-full p-2 transition-all active:scale-95 disabled:opacity-50"
-          >
+            className="text-white border border-[#DA653B] rounded font-medium bg-[#DA653B] w-full p-2 transition-all active:scale-95 disabled:opacity-50">
             {loading ? "LOADING..." : "LOG IN"}
           </button>
  
@@ -130,7 +133,9 @@ return (
  
             <p className="text-center mt-5 text-[#56423D] text-base">
               New to loqalli?{" "}
+              <Link href={signUpHref} className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">
               <span className="text-[#C05C3F] font-bold cursor-pointer hover:underline transition-all">Sign up</span>
+              </Link>
             </p>
           </div>
         </form>

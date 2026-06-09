@@ -131,19 +131,9 @@ export default function HostRegister() {
 
         <button 
           onClick={handleRegister} 
-          className="w-full bg-[#DA653B] text-white py-4 mt-12 rounded-full font-bold text-xs tracking-widest hover:bg-[#b05e30] hover:shadow-lg transition-all transform active:scale-[0.98] uppercase"
-        >
+          className="w-full bg-[#DA653B] text-white py-4 mt-12 rounded-full font-bold text-xs tracking-widest hover:bg-[#b05e30] hover:shadow-lg transition-all transform active:scale-[0.98] uppercase">
           Register as Host
         </button>
-
-        <div className="mt-10 text-center pb-10 text-xs tracking-wider uppercase font-bold text-slate-400">
-          <p>
-            Already have an account?{' '}
-            <Link href="/Login/login-host" className="text-[#D17842] hover:text-[#b05e30] transition-colors underline underline-offset-4 ml-1">
-              Log in
-            </Link>
-          </p>
-        </div>
       </div>
     </div>
   );

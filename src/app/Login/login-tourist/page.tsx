@@ -67,7 +67,7 @@ return (
       <div className="w-full max-w-2xl h-[540px] bg-white rounded-2xl shadow-lg overflow-hidden grid grid-cols-1 md:grid-cols-2">
  
         <div className="hidden md:flex relative">
-          <Image src="/image.jpg" alt="login image" width={500} height={500} className="object-cover w-full h-full"/>
+          <Image src="/Image.jpg" alt="login image" width={500} height={500} className="object-cover w-full h-full"/>
           <div className="absolute bottom-10 left-10">
             <h2 className="text-[#FFFFFF] text-3xl font-serif font-thin mb-2">Artistry in every connection.</h2>
             <p className="text-[#FFFFFF] max-w-[260px] leading-4 text-xs">Experience the heart of El Salvador through the hands of its finest artisans.</p>

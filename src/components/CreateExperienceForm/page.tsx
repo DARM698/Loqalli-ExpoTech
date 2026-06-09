@@ -25,7 +25,10 @@ const calendarStyles = `
     --rdp-background-color: #F3D9CF; 
     margin: 0;
     font-family: inherit;
+    width: 100%;
   }
+  .rdp-month { width: 100%; }
+  .rdp-table { width: 100%; }
   .rdp-day_selected:not([disabled]), 
   .rdp-day_selected:focus:not([disabled]), 
   .rdp-day_selected:hover:not([disabled]) { 
@@ -65,9 +68,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
   const [arrivalFiles, setArrivalFiles] = useState<File[]>([]);
   const [arrivalPreviews, setArrivalPreviews] = useState<string[]>(initialData?.arrivalImages || []);
   
-  useEffect(() => { 
-    setMounted(true); 
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const handleSearchLocation = async () => {
     if (!address || typeof window === 'undefined') return;
@@ -183,7 +184,6 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
 
   return (
     <div suppressHydrationWarning>
-      
       {!mounted ? (
         <div className="min-h-screen bg-white p-8 animate-pulse flex items-center justify-center">
              <div className="text-[#D2693E] font-serif text-xl">Loading...</div>
@@ -200,7 +200,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
 
           <form ref={formRef} onSubmit={handleSubmit} className="max-w-5xl mx-auto space-y-8 pb-20">
             
-            <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-4 shadow-sm">
+            <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 space-y-4 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Basic Info</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
@@ -234,7 +234,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </div>
             </section>
 
-            <section className="border border-[#F3D9CF] rounded-xl p-6 space-y-6 shadow-sm">
+            <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 space-y-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Experience Details</h2>
               <textarea name="description" defaultValue={initialData?.description} required rows={4} placeholder="Describe the magic of your craft..." className="w-full p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg resize-none outline-none focus:ring-2 focus:ring-[#D2693E]" />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -243,10 +243,10 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </div>
             </section>
 
-            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+            <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Location</h2>
               <div className="space-y-4 pt-4">
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input 
                     name="address" 
                     value={address} 
@@ -255,7 +255,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
                     placeholder="Search address in El Salvador..." 
                     className="flex-1 p-3 bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg outline-none focus:ring-2 focus:ring-[#D2693E]" 
                   />
-                  <button type="button" onClick={handleSearchLocation} className="bg-[#D2693E] text-white px-6 py-2 rounded-lg font-bold hover:bg-[#b05832] transition-colors">Find</button>
+                  <button type="button" onClick={handleSearchLocation} className="bg-[#D2693E] text-white px-6 py-3 sm:py-2 rounded-lg font-bold hover:bg-[#b05832] transition-colors">Find</button>
                 </div>
                 <div className="w-full h-64 rounded-xl overflow-hidden z-0 border border-[#F3D9CF]">
                   <DynamicMap lat={location.lat} lng={location.lng} />
@@ -263,10 +263,10 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </div>
             </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 shadow-sm flex flex-col items-center">
                 <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 w-full mb-4">Availability</h2>
-                <div className="bg-[#F3D9CF]/10 rounded-lg p-2 border border-[#F3D9CF]/50">
+                <div className="bg-[#F3D9CF]/10 rounded-lg p-2 border border-[#F3D9CF]/50 w-full overflow-hidden">
                   <DayPicker
                     mode="multiple"
                     selected={selectedDates}
@@ -277,15 +277,15 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
                 </div>
               </section>
 
-              <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm flex flex-col justify-between">
+              <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 shadow-sm flex flex-col justify-between">
                 <div>
                   <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Schedule & Payout</h2>
                   <div className="space-y-4 mt-4">
                     {[ {label: 'From', state: startPeriod, setState: setStartPeriod, open: isStartOpen, setOpen: setIsStartOpen, hName: 'startHour', mName: 'startMin'},
                        {label: 'To', state: endPeriod, setState: setEndPeriod, open: isEndOpen, setOpen: setIsEndOpen, hName: 'endHour', mName: 'endMin'}
                     ].map((time, i) => (
-                      <div key={i} className="flex items-center gap-4">
-                        <span className="text-xs font-bold text-gray-400 w-12 uppercase">{time.label}</span>
+                      <div key={i} className="flex items-center gap-2 md:gap-4">
+                        <span className="text-xs font-bold text-gray-400 w-10 md:w-12 uppercase">{time.label}</span>
                         <div className="flex bg-[#F3D9CF]/30 border border-[#F3D9CF] rounded-lg overflow-visible flex-1">
                           <input name={time.hName} type="number" min={1} max={12} defaultValue={initialData?.[time.hName] || (time.label === 'From' ? 9 : 12)} className={`w-full p-2 bg-transparent outline-none text-center font-medium ${noArrowsClass}`} />
                           <span className="flex items-center text-[#D2693E] font-bold">:</span>
@@ -293,7 +293,7 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
                           <div className="relative">
                             <div 
                               onClick={() => time.setOpen(!time.open)}
-                              className="bg-[#D2693E] text-white text-xs font-bold px-4 h-full flex items-center cursor-pointer min-w-[60px] justify-center hover:bg-[#b05832] transition-colors rounded-r-lg"
+                              className="bg-[#D2693E] text-white text-xs font-bold px-3 md:px-4 h-full flex items-center cursor-pointer min-w-[50px] md:min-w-[60px] justify-center hover:bg-[#b05832] transition-colors rounded-r-lg"
                             >
                               {time.state}
                             </div>
@@ -323,21 +323,17 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </section>
             </div>
 
-            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+            <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2">Photos</h2>
               <div className="flex flex-wrap gap-4 mt-4">
-                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
+                <label className="w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
                   <span className="text-2xl text-[#D2693E]">+</span>
                   <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                 </label>
                 {previews.map((src, i) => (
-                  <div key={i} className="relative w-24 h-24">
+                  <div key={i} className="relative w-20 h-20 md:w-24 md:h-24">
                     <img src={src} className="w-full h-full object-cover rounded-lg border border-[#F3D9CF]" alt="Preview" />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(i)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors"
-                    >
+                    <button type="button" onClick={() => removeImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors">
                       <X size={14} />
                     </button>
                   </div>
@@ -345,21 +341,17 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </div>
             </section>
 
-            <section className="border border-[#F3D9CF] rounded-xl p-6 shadow-sm">
+            <section className="border border-[#F3D9CF] rounded-xl p-4 md:p-6 shadow-sm">
               <h2 className="font-bold text-lg border-b border-[#F3D9CF] pb-2 mb-4">Arrival Photos</h2>
               <div className="flex flex-wrap gap-4">
-                <label className="w-24 h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
+                <label className="w-20 h-20 md:w-24 md:h-24 flex flex-col items-center justify-center border-2 border-dashed border-[#F3D9CF] rounded-lg cursor-pointer hover:bg-[#F3D9CF]/10">
                   <span className="text-2xl text-[#D2693E]">+</span>
                   <input type="file" multiple accept="image/*" onChange={handleArrivalFileChange} className="hidden" />
                 </label>
                 {arrivalPreviews.map((src, i) => (
-                  <div key={i} className="relative w-24 h-24">
+                  <div key={i} className="relative w-20 h-20 md:w-24 md:h-24">
                     <img src={src} className="w-full h-full object-cover rounded-lg border border-[#F3D9CF]" alt="Arrival Preview" />
-                    <button
-                      type="button"
-                      onClick={() => removeArrivalImage(i)}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors"
-                    >
+                    <button type="button" onClick={() => removeArrivalImage(i)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md hover:bg-red-600 transition-colors">
                       <X size={14} />
                     </button>
                   </div>
@@ -367,9 +359,9 @@ export default function CreateExperienceForm({ initialData }: { initialData?: an
               </div>
             </section>
 
-            <footer className="flex justify-end gap-4 pt-4 items-center">
+            <footer className="flex flex-col sm:flex-row justify-end gap-4 pt-4 items-center">
               <button type="button" onClick={() => router.push('/explore')} className="text-gray-500 font-bold px-6 py-2 hover:text-[#D2693E]">View</button>
-              <button disabled={loading} type="submit" className="bg-[#D2693E] text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
+              <button disabled={loading} type="submit" className="w-full sm:w-auto bg-[#D2693E] text-white px-12 py-4 rounded-xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all">
                 {loading ? 'Saving...' : (initialData ? 'Update Experience' : 'Publish Experience')}
               </button>
             </footer>

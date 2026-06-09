@@ -229,7 +229,7 @@ export default function Home() {
       <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
           <div className="space-y-8">
-            <Image src="/logo.png" alt="Logo" width={130} height={130} />
+            <Image src="/Logo.png" alt="Logo" width={130} height={130} />
             <p className="text-slate-400 text-sm leading-relaxed">Crafting connections across the artisanal landscape of El Salvador.</p>
           </div>
           <div className="space-y-6">

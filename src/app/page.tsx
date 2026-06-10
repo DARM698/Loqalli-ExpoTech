@@ -93,9 +93,6 @@ export default function Home() {
           <p className="text-lg text-slate-500 leading-relaxed max-w-md">
             Skip the generic tours. Connect with master artisans in curated journeys that preserve a thousand years of heritage.
           </p>
-          <button className="bg-slate-900 text-white px-8 py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-[#D17842] transition-all flex items-center gap-2 group uppercase">
-            Explore Now <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-          </button>
         </div>
 
         <div className="lg:col-span-7 relative h-[600px] w-full rounded-[2.5rem] overflow-hidden shadow-2xl">
@@ -218,40 +215,12 @@ export default function Home() {
             Join us in redefining travel through intentional connection and the preservation of culture.
           </p>
           <div className="flex justify-center pt-6">
-            <button className="bg-white text-[#D17842] px-12 py-5 rounded-xl font-bold text-xs tracking-widest uppercase shadow-2xl hover:bg-slate-50 transition-all transform hover:-translate-y-1">
+            <Link href="/register" className="bg-white text-[#D17842] px-12 py-5 rounded-xl font-bold text-xs tracking-widest uppercase shadow-2xl hover:bg-slate-50 transition-all transform hover:-translate-y-1">
               Start your journey
-            </button>
+            </Link>
           </div>
         </div>
       </section>
-
-     
-      <footer className="bg-white pt-32 pb-12 px-10 border-t border-slate-100 reveal opacity-0 translate-y-[30px] transition-all duration-[1000ms] ease-out">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
-          <div className="space-y-8">
-            <Image src="/logo.png" alt="Logo" width={130} height={130} />
-            <p className="text-slate-400 text-sm leading-relaxed">Crafting connections across the artisanal landscape of El Salvador.</p>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Resources</h4>
-            <ul className="space-y-4 text-sm text-slate-500 font-medium">
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Host an Experience</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Safety & Standards</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Help Center</a></li>
-            </ul>
-          </div>
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-bold tracking-[0.3em] text-slate-900 uppercase">Legal</h4>
-            <ul className="space-y-4 text-sm text-slate-500 font-medium">
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Terms of Service</a></li>
-              <li><a href="#" className="hover:text-[#D17842] transition-colors">Privacy Policy</a></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto pt-8 border-t border-slate-50 text-center text-[9px] text-slate-400 font-bold tracking-[0.4em] uppercase">
-          © 2026 Loqalli — Preserving Culture Through Micro-Experiences
-        </div>
-      </footer>
     </main>
   );
 }

@@ -9,7 +9,7 @@ export default function BookingCalendar({
   experienceId, 
   maxParticipants, 
   bookings,
-  availableDays = [], // Recibe ['2026-06-04', '2026-06-15', ...]
+  availableDays = [],
   isCheckout = false, 
   selectedDate,
   onDateChange,
@@ -66,36 +66,27 @@ export default function BookingCalendar({
       />
       
       {selectedDate && (
-        <div className="mt-6 space-y-4 border-t pt-6">
-          <p className="text-sm font-bold text-[#D2693E]">
-            {format(selectedDate, "PPPP")} • {spotsLeft} cupos disponibles
-          </p>
-          
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Personas:</span>
-            <input
-              type="number"
-              min="1"
-              max={spotsLeft}
-              value={guests}
-              onChange={(e) => onGuestsChange?.(Math.max(1, Math.min(spotsLeft, parseInt(e.target.value) || 1)))}
-              className="w-16 p-2 border rounded-lg"
-            />
-          </div>
+        <div className="flex items-center gap-3">
+  <button
+    type="button"
+    onClick={() => onGuestsChange?.(Math.max(1, guests - 1))}
+    disabled={guests <= 1}
+    className="w-10 h-10 border rounded"
+  >
+    -
+  </button>
 
-          {!isCheckout && (
-            <button
-              onClick={() => {
-                const dateStr = format(selectedDate, "yyyy-MM-dd");
-                router.push(`/checkout/${experienceId}?date=${dateStr}&guests=${guests}`);
-              }}
-              disabled={spotsLeft === 0}
-              className="w-full bg-[#D2693E] text-white py-3 rounded-lg font-bold hover:opacity-90 transition disabled:opacity-50"
-            >
-              Reservar ahora
-            </button>
-          )}
-        </div>
+  <span className="w-8 text-center">{guests}</span>
+
+  <button
+    type="button"
+    onClick={() => onGuestsChange?.(Math.min(spotsLeft, guests + 1))}
+    disabled={guests >= spotsLeft}
+    className="w-10 h-10 border rounded"
+  >
+    +
+  </button>
+</div>
       )}
     </div>
   );

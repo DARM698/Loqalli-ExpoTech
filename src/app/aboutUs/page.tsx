@@ -29,28 +29,27 @@ export default async function AboutPage() {
       <NavbarUser role={userSession.role} userId={userSession.id} />
 
       <section
-         className="relative h-[500px] flex items-center justify-center text-center"
-          style={{
-          backgroundImage:
-          "url('/FotoAboutUs.jpeg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-  }}
-      >
-        {/* Overlay*/}
-        <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20"></div>
+      className="relative h-[500px] flex items-end justify-center text-center pb-16"
+      style={{
+        backgroundImage: "url('/FotoAboutUs.jpeg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+>
+        {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 to-black/20"></div>
 
-        {/* Contenido */}
-        <div className="relative z-10 px-6 text-white max-w-4xl">
-          <h1 className="text-7xl md:text-8xl font-serif font-medium tracking-tight">
-            About Us
-          </h1>
+      {/* Contenido */}
+      <div className="relative z-10 px-6 text-white max-w-4xl">
+        <h1 className="text-7xl md:text-8xl font-serif font-medium tracking-tight">
+          About Us
+        </h1>
 
-          <p className="mt-6 text-lg text-gray-200 leading-relaxed">
-            Local knowledge and tourists curiosity by offering unique
-            micro-experiences hosted by local individuals.
-          </p>
-        </div>
+        <p className="mt-6 text-lg text-gray-200 leading-relaxed">
+          Local knowledge and tourists curiosity by offering unique
+          micro-experiences hosted by local individuals.
+        </p>
+      </div>
       </section>
 
       {/* BLOQUE 1 */}

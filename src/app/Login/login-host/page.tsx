@@ -40,15 +40,15 @@ export default function LoginForm() {
 
                 if (data.user.role !== expectedRole) {
                     const message = isHostRoute 
-                        ? "Esta cuenta está registrada como Turista. Por favor ve al login de Turistas."
-                        : "Esta cuenta está registrada como Host. Por favor ve al login de Hosts.";
+                        ? "The email provided is already in our system. Please, try with another email."
+                        : "The email provided is already in our system. Please, try with another email.";
                     
                     alert(message);
                     setLoading(false);
                     return;
                 }
                 
-                alert(`¡Bienvenido de vuelta, ${data.user.fullName}!`);
+                alert(`Welcome Back ${data.user.fullName}!`);
                 
                 // Redirección basada en el rol
                 router.push(isHostRoute ? '/dashboard' : '/explore'); 

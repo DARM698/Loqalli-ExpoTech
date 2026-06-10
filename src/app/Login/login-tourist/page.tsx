@@ -39,12 +39,12 @@ export default function Tourist() {
             if (res.ok && data.success) {
                 // Verificar que sea TURIST
                 if (data.user.role !== 'TOURIST') {
-                    alert("Esta cuenta está registrada como Host. Por favor ve al login de Hosts.");
+                    alert("The email provided is already in our system. Please, try with another email.");
                     setLoading(false);
                     return;
                 }
                 
-                alert(`¡Bienvenido de vuelta, ${data.user.fullName}!`);
+                alert(`Welcome Back ${data.user.fullName}!`);
                 
                 // REDIRECCIÓN ACTUALIZADA A EXPLORE
                 router.push('/explore'); 

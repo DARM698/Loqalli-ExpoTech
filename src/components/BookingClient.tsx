@@ -61,11 +61,11 @@ export default function BookingClient({ experience }: { experience: any }) {
           <div className="space-y-4">
             <div className="flex justify-between">
               <span>{guests} people</span>
-              <span className="font-bold">${subtotal}</span>
+              <span className="font-bold">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between border-t pt-4 border-[#F3D9CF]">
               <span className="font-bold text-lg">Total</span>
-              <span className="font-bold text-2xl text-[#D2693E]">${subtotal}</span>
+              <span className="font-bold text-2xl text-[#D2693E]">${subtotal.toFixed(2)}</span>
             </div>
           </div>
 

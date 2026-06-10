@@ -8,7 +8,7 @@ export const BankInfoForm = ({ onChange }: { onChange: any }) => (
       <option value="cuscatlan">Banco Cuscatlan</option>
       {/* ... más bancos de El Salvador */}
     </select>
-    <input name="accountNumber" type="number" placeholder="Numbers only" onChange={onChange} className="w-full p-2 bg-[#f3eee7] focus:outline-none focus:ring-0" />
-    <input name="routingNumber" placeholder="8 or 11 characters" onChange={onChange} className="w-full p-2 bg-[#f3eee7] focus:outline-none focus:ring-0" />
+    <input name="accountNumber" type="number" placeholder="Only numbers are allowed" onChange={onChange} className="w-full p-2 bg-[#f3eee7] focus:outline-none focus:ring-0" />
+    <input name="routingNumber" placeholder="Must contain 8 or 11 digits" onChange={onChange} className="w-full p-2 bg-[#f3eee7] focus:outline-none focus:ring-0" />
   </div>
 );

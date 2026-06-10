@@ -20,18 +20,18 @@ export default function RegisterWelcomePage() {
           </h1>
  
           <p className="text-sm md:text-base text-slate-500 leading-relaxed max-w-sm">
-            How would you like to log in, as a tourist or a host?
+            How would you like to sign up, as a tourist or a host?
           </p>
  
           <div className="w-full space-y-4 pt-2">
             <Link
-              href="/Login/login-tourist"
+              href="/register/turista"
               className="flex w-full items-center justify-center rounded-full bg-slate-50/50 py-4 text-xs font-bold uppercase tracking-widest text-slate-700 border border-slate-200 transition-all hover:bg-[#D2693E] hover:text-white hover:shadow-lg active:scale-[0.98]">
               Tourist
             </Link>
  
             <Link
-              href="/Login/login-host"
+              href="/register/host"
               className="flex w-full items-center justify-center rounded-full bg-slate-50/50 py-4 text-xs font-bold uppercase tracking-widest text-slate-700 border border-slate-200 transition-all hover:bg-[#D2693E] hover:text-white hover:shadow-lg active:scale-[0.98]">
               Host
             </Link>

@@ -26,6 +26,7 @@ export default function NavbarUser({ role, userId }: NavbarUserProps) {
         { name: 'Explore', href: '/explore' },
         { name: 'Create Experience', href: '/uploadMicroexperiences' },
         { name: 'Agenda / Calendar', href: '/dashboard' },
+        {name : 'About us', href: '/aboutUs' },
         { name: 'Profile', href: profileHref },
       ];
 
@@ -36,7 +37,7 @@ export default function NavbarUser({ role, userId }: NavbarUserProps) {
   return (
     <nav className="relative w-full bg-white border-b border-[#F3D9CF] px-4 flex flex-wrap items-center justify-between sticky top-0 z-[100] gap-2 py-1">
       
-      <Link href="aboutUs">
+      <Link href="/">
         <Image src="/logo1.png" alt="Logo" width={150} height={150} className="w-16 md:w-38" />
       </Link>
 

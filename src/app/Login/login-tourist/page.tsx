@@ -88,7 +88,6 @@ return (
  
           <div className="flex justify-between items-center">
             <label className="text-[#56423D] p-2">Password</label>
-            <h1 className="text-[#DA653B] p-2 cursor-pointer text-sm hover:underline transition-all">Forgot password?</h1>
           </div>
  
           <div className="relative w-full mb-3 flex items-center">
@@ -107,11 +106,6 @@ return (
             </button>
           </div>
  
-          <div className="flex items-center gap-3 mb-4 text-sm text-[#56423D]">
-            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 accent-[#DA653B]" />
-            <p>Remember me for 30 days</p>
-          </div>
- 
           <button
             type="submit"
             disabled={loading}
@@ -122,14 +116,8 @@ return (
           <div className="w-full mt-4">
             <div className="flex items-center gap-4 my-2">
               <hr className="flex-1 border-[#DA653B]/30"/>
-              <p className="text-[#56423D] text-xs uppercase tracking-wider">Or continue with</p>
               <hr className="flex-1 border-[#DA653B]/30"/>
             </div>
- 
-            <button type="button" className="w-full border border-[#2D362E] rounded-lg p-2 flex items-center justify-center gap-2 transition hover:bg-gray-50 active:scale-95">
-              <span className="text-xl font-bold">G</span>
-              <span className="text-base font-medium">Continue with Google</span>
-            </button>
  
             <p className="text-center mt-5 text-[#56423D] text-base">
               New to loqalli?{" "}

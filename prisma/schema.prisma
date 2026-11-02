@@ -113,7 +113,7 @@ model Transaction {
   payoutStatus  PayoutStatus      @default(NOT_APPLICABLE)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
-  booking       Booking           @relation(fields: [bookingId], references: [id])
+  booking       Booking           @relation(fields: [bookingId], references: [id], onDelete: Cascade)
   tourist       User              @relation(fields: [touristId], references: [id])
 }
 

@@ -13,10 +13,8 @@ import {
   CreditCard 
 } from "lucide-react";
 
-// Importamos el componente Navbar desde tu archivo externo
 import NavbarUser from "@/components/shared/navbar"; 
 
-// --- Dashboard Component ---
 interface DashboardTabsClientProps {
   bookings: any[];
   reviews: any[];
@@ -73,7 +71,6 @@ export default function DashboardTabsClient({
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar importado */}
       <NavbarUser role={role} userId={userId} />
 
       <div className="max-w-6xl mx-auto p-6 md:p-12">
@@ -113,7 +110,7 @@ export default function DashboardTabsClient({
               <div className="flex justify-between items-baseline mb-4">
                 <h2 className="text-2xl font-serif font-medium text-gray-900">Today's Bookings</h2>
                 <span className="text-xs font-bold text-gray-400 tracking-wider flex items-center gap-1">
-                  <Calendar size={14} /> JUNE 2026
+                  <Calendar size={14} /> 
                 </span>
               </div>
               <div className="flex gap-16 text-left border-b border-gray-100 pb-6">
